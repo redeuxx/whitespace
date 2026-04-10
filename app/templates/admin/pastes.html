@@ -1,0 +1,145 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Manage Pastes{% endblock %}
+
+{% block content %}
+<div class="is-flex is-align-items-center is-justify-content-space-between mb-4">
+  <h1 class="title is-4 mb-0">
+    <span class="icon"><i class="fas fa-paste"></i></span>
+    Manage Pastes
+  </h1>
+  <form method="post" action="{{ url_for('admin.purge_expired') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit" class="button is-warning is-small"
+            data-confirm="Purge all expired pastes?">
+      <span class="icon"><i class="fas fa-trash-clock"></i></span>
+      <span>Purge Expired</span>
+    </button>
+  </form>
+</div>
+
+<!-- Filters -->
+<div class="tabs is-boxed mb-4" style="border-bottom-color: var(--ws-border);">
+  <ul>
+    {% for f, label in [('all','All'), ('public','Public'), ('private','Private'), ('expired','Expired'), ('protected','Protected')] %}
+    <li class="{% if filter_by == f %}is-active{% endif %}">
+      <a href="{{ url_for('admin.pastes', filter=f) }}"
+         style="{% if filter_by == f %}background: var(--ws-surface); border-color: var(--ws-border); color: var(--ws-accent);{% else %}background: transparent; border-color: transparent; color: var(--ws-muted);{% endif %}">
+        {{ label }}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="box p-0">
+  <table class="table is-fullwidth is-hoverable">
+    <thead>
+      <tr>
+        <th>Slug</th>
+        <th>Title</th>
+        <th>Lang</th>
+        <th>IP</th>
+        <th>Views</th>
+        <th>Flags</th>
+        <th>Created</th>
+        <th>Expires</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for paste in pastes %}
+      <tr {% if paste.is_expired %}style="opacity:0.55"{% endif %}>
+        <td>
+          <a href="{{ url_for('main.view_paste', slug=paste.slug) }}"
+             style="font-family: monospace; color: var(--ws-accent);" target="_blank">
+            {{ paste.slug }}
+          </a>
+        </td>
+        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          {{ paste.title or '—' }}
+        </td>
+        <td>
+          {% if paste.language %}
+            <span class="tag is-language">{{ paste.language | lang_display }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          <span class="paste-meta" style="font-family: monospace; font-size: 0.75rem;">
+            {{ paste.ip_address or '—' }}
+          </span>
+          <a href="{{ url_for('admin.ips') }}?ban={{ paste.ip_address }}"
+             class="button is-danger is-small is-light ml-1" title="Ban this IP"
+             style="padding: 2px 6px; height: auto;">
+            <i class="fas fa-ban"></i>
+          </a>
+        </td>
+        <td>{{ paste.view_count }}</td>
+        <td>
+          <div style="display: flex; gap: 3px; flex-wrap: wrap;">
+            {% if paste.is_private %}
+              <span class="tag is-private" style="font-size:0.65rem;">Private</span>
+            {% endif %}
+            {% if paste.is_password_protected %}
+              <span class="tag is-protected" style="font-size:0.65rem;">Lock</span>
+            {% endif %}
+            {% if paste.burn_after_read %}
+              <span class="tag is-burn" style="font-size:0.65rem;">Burn</span>
+            {% endif %}
+            {% if paste.is_expired %}
+              <span class="tag is-danger" style="font-size:0.65rem;">Expired</span>
+            {% endif %}
+          </div>
+        </td>
+        <td class="paste-meta">{{ time_ago(paste.created_at) }}</td>
+        <td class="paste-meta">
+          {% if paste.burn_after_read %}Burn
+          {% elif paste.expires_at %}{{ time_until(paste.expires_at) }}
+          {% else %}Never{% endif %}
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('admin.delete_paste', slug=paste.slug) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="button is-danger is-small"
+                    data-confirm="Delete paste {{ paste.slug }}?">
+              <span class="icon"><i class="fas fa-trash"></i></span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="9" class="has-text-centered" style="color: var(--ws-muted); padding: 2rem;">
+        No pastes found.
+      </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if pagination and pagination.pages > 1 %}
+<nav class="pagination is-centered mt-4" role="navigation">
+  {% if pagination.has_prev %}
+    <a class="pagination-previous" href="{{ url_for('admin.pastes', page=pagination.prev_num, filter=filter_by) }}">Previous</a>
+  {% else %}
+    <a class="pagination-previous" disabled>Previous</a>
+  {% endif %}
+  {% if pagination.has_next %}
+    <a class="pagination-next" href="{{ url_for('admin.pastes', page=pagination.next_num, filter=filter_by) }}">Next</a>
+  {% else %}
+    <a class="pagination-next" disabled>Next</a>
+  {% endif %}
+  <ul class="pagination-list">
+    {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if page_num %}
+        <li>
+          <a class="pagination-link {% if page_num == pagination.page %}is-current{% endif %}"
+             href="{{ url_for('admin.pastes', page=page_num, filter=filter_by) }}">{{ page_num }}</a>
+        </li>
+      {% else %}
+        <li><span class="pagination-ellipsis">&hellip;</span></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

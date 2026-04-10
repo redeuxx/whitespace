@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}500 Server Error — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="columns is-centered">
+  <div class="column is-6 has-text-centered py-6">
+    <p class="title is-1" style="color: var(--ws-red);">500</p>
+    <h1 class="title is-4">Internal Server Error</h1>
+    <p style="color: var(--ws-muted);">Something went wrong on our end. Please try again later.</p>
+    <a href="{{ url_for('main.index') }}" class="button is-light mt-4">&larr; Home</a>
+  </div>
+</div>
+{% endblock %}

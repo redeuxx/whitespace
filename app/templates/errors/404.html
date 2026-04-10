@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}404 Not Found — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="columns is-centered">
+  <div class="column is-6 has-text-centered py-6">
+    <p class="title is-1" style="color: var(--ws-muted);">404</p>
+    <h1 class="title is-4">Paste Not Found</h1>
+    <p style="color: var(--ws-muted);">This paste doesn't exist or has been removed.</p>
+    <a href="{{ url_for('main.index') }}" class="button is-light mt-4">&larr; Home</a>
+  </div>
+</div>
+{% endblock %}

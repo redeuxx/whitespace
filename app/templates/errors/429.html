@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}429 Rate Limited — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="columns is-centered">
+  <div class="column is-6 has-text-centered py-6">
+    <p class="title is-1" style="color: var(--ws-yellow);">429</p>
+    <h1 class="title is-4">Too Many Requests</h1>
+    <p style="color: var(--ws-muted);">You've been rate limited. Please wait a moment before trying again.</p>
+    <a href="{{ url_for('main.index') }}" class="button is-light mt-4">&larr; Home</a>
+  </div>
+</div>
+{% endblock %}

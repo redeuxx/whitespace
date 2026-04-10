@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Redirecting… — {{ site_name }}{% endblock %}
+
+{% block content %}
+
+{% if paste.burn_after_read %}
+<div id="burn-warning" class="notification is-warning mb-4">
+  <button class="delete"></button>
+  <span class="icon"><i class="fas fa-fire"></i></span>
+  {% if burn_preview %}
+  <strong>Burn after reading:</strong> This paste will be permanently destroyed the next time this paste is viewed.
+  {% else %}
+  <strong>Burn after reading:</strong> This paste has been destroyed and will not be accessible again.
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="columns is-centered">
+  <div class="column is-6">
+    <div class="box">
+      <div class="has-text-centered mb-5">
+        <span class="icon is-large" style="color: var(--ws-accent);">
+          <i class="fas fa-arrow-up-right-from-square fa-2x"></i>
+        </span>
+        {% if is_creator %}
+        <h1 class="title is-5 mt-3">Redirect paste created</h1>
+        <p class="subtitle is-6" style="color: var(--ws-muted);">
+          Visitors to this paste will be redirected to this URL.
+        </p>
+        {% else %}
+        <h1 class="title is-5 mt-3">You are being redirected</h1>
+        <p class="subtitle is-6" style="color: var(--ws-muted);">
+          This paste links to an external URL.
+        </p>
+        {% endif %}
+      </div>
+
+      <div class="box" style="background: var(--ws-surface); border: 1px solid var(--ws-border); word-break: break-all;">
+        <p style="font-size: 0.75rem; color: var(--ws-muted); margin-bottom: 0.25rem;">Destination</p>
+        <a href="{{ redirect_url }}" id="redirect-link"
+           style="color: var(--ws-accent); font-family: monospace; font-size: 0.9rem;"
+           rel="noopener noreferrer">{{ redirect_url }}</a>
+      </div>
+
+      {% if not is_creator %}
+      <!-- Progress bar -->
+      <div class="mb-4">
+        <div style="height: 4px; background: var(--ws-border); border-radius: 2px; overflow: hidden;">
+          <div id="progress-bar"
+               style="height: 100%; width: 100%; background: var(--ws-accent); border-radius: 2px;
+                      transition: width linear;"></div>
+        </div>
+        <p id="countdown-text" class="has-text-centered mt-2"
+           style="font-size: 0.85rem; color: var(--ws-muted);">
+          Redirecting in <strong id="countdown-num">5</strong>s…
+        </p>
+      </div>
+      {% endif %}
+
+      <div class="buttons is-centered">
+        <a href="{{ redirect_url }}" id="go-now-btn" class="button is-primary"
+           rel="noopener noreferrer">
+          <span class="icon"><i class="fas fa-arrow-right"></i></span>
+          <span>Go now</span>
+        </a>
+        {% if not is_creator %}
+        <button id="cancel-btn" class="button is-light">
+          <span class="icon"><i class="fas fa-xmark"></i></span>
+          <span>Cancel</span>
+        </button>
+        {% endif %}
+      </div>
+
+      <div class="mt-4 has-text-centered">
+        <a href="{{ url_for('main.index') }}" style="color: var(--ws-muted); font-size: 0.875rem;">
+          &larr; Back to pastes
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{% if not is_creator %}
+<script>
+(function () {
+  const DELAY = 5;
+  const bar = document.getElementById('progress-bar');
+  const num = document.getElementById('countdown-num');
+  const text = document.getElementById('countdown-text');
+  const cancelBtn = document.getElementById('cancel-btn');
+  const url = {{ redirect_url | tojson }};
+
+  let cancelled = false;
+  let remaining = DELAY;
+
+  bar.style.transitionDuration = DELAY + 's';
+  // Trigger reflow so the transition fires from 100% → 0%
+  bar.getBoundingClientRect();
+  bar.style.width = '0%';
+
+  const interval = setInterval(function () {
+    if (cancelled) return;
+    remaining -= 1;
+    num.textContent = remaining;
+    if (remaining <= 0) {
+      clearInterval(interval);
+      window.location.href = url;
+    }
+  }, 1000);
+
+  cancelBtn.addEventListener('click', function () {
+    cancelled = true;
+    clearInterval(interval);
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    text.textContent = 'Redirect cancelled.';
+    cancelBtn.disabled = true;
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

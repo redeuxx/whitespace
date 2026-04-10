@@ -1,0 +1,526 @@
+/* ── Whitespace — custom styles ── */
+
+:root {
+  --ws-bg: #0d1117;
+  --ws-surface: #161b22;
+  --ws-border: #30363d;
+  --ws-text: #c9d1d9;
+  --ws-muted: #8b949e;
+  --ws-accent: #58a6ff;
+  --ws-green: #3fb950;
+  --ws-red: #f85149;
+  --ws-yellow: #d29922;
+  --ws-purple: #bc8cff;
+}
+
+/* LIGHT THEME */
+[data-theme="light"] {
+  --ws-bg: #f0f2f5;
+  --ws-surface: #e8eaed;
+  --ws-border: #c8ccd0;
+  --ws-text: #2d333b;
+  --ws-muted: #6e7781;
+  --ws-accent: #0969da;
+  --ws-green: #1a7f37;
+  --ws-red: #cf222e;
+  --ws-yellow: #9a6700;
+  --ws-purple: #8250df;
+}
+
+[data-theme="light"] .paste-code-block {
+  background-color: #e2e4e8;
+}
+
+[data-theme="light"] .button.is-primary {
+  color: #ffffff;
+}
+
+[data-theme="light"] .button.is-primary:hover {
+  background-color: #0550ae;
+}
+
+[data-theme="light"] .button.is-light:hover {
+  background-color: #e1e4e8;
+  color: #24292f;
+}
+
+[data-theme="light"] .navbar-item:hover,
+[data-theme="light"] .navbar-link:hover {
+  color: #24292f !important;
+}
+
+[data-theme="light"] .admin-menu .menu-list a:hover {
+  color: #24292f;
+}
+
+[data-theme="light"] .title.is-4,
+[data-theme="light"] .title.is-5 {
+  color: var(--ws-text) !important;
+}
+
+[data-theme="light"] .table.is-hoverable tbody tr:hover {
+  background-color: rgba(208, 215, 222, 0.5);
+}
+
+[data-theme="light"] .paste-row:hover {
+  background-color: rgba(208, 215, 222, 0.4);
+}
+
+html, body {
+  background-color: var(--ws-bg);
+  color: var(--ws-text);
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Navbar ── */
+.navbar {
+  background-color: var(--ws-surface) !important;
+  border-bottom: 1px solid var(--ws-border);
+}
+
+.navbar-brand strong {
+  color: var(--ws-accent);
+  font-size: 1.25rem;
+  letter-spacing: -0.5px;
+}
+
+.navbar-item, .navbar-link {
+  color: var(--ws-text) !important;
+}
+
+.navbar-item:hover, .navbar-link:hover {
+  background-color: var(--ws-border) !important;
+  color: #fff !important;
+}
+
+.navbar-burger span {
+  background-color: var(--ws-text);
+}
+
+/* ── Boxes / Cards ── */
+.box {
+  background-color: var(--ws-surface);
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  color: var(--ws-text);
+}
+
+/* ── Buttons ── */
+.button.is-primary {
+  background-color: var(--ws-accent);
+  border-color: transparent;
+  color: #0d1117;
+  font-weight: 600;
+}
+
+.button.is-primary:hover {
+  background-color: #79c0ff;
+}
+
+.button.is-light {
+  background-color: var(--ws-border);
+  color: var(--ws-text);
+  border-color: transparent;
+}
+
+.button.is-light:hover {
+  background-color: #3d444d;
+  color: #fff;
+}
+
+/* ── Form controls ── */
+.input, .textarea, .select select {
+  background-color: var(--ws-bg);
+  border-color: var(--ws-border);
+  color: var(--ws-text);
+  border-radius: 6px;
+}
+
+.input:focus, .textarea:focus, .select select:focus {
+  border-color: var(--ws-accent);
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+}
+
+.input::placeholder, .textarea::placeholder {
+  color: var(--ws-muted);
+}
+
+.label {
+  color: var(--ws-text);
+  font-weight: 600;
+}
+
+.help {
+  color: var(--ws-muted);
+}
+
+.select::after {
+  border-color: var(--ws-muted) !important;
+}
+
+/* ── Code / Paste area ── */
+.paste-editor {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  min-height: 300px;
+  resize: vertical;
+  tab-size: 4;
+}
+
+.paste-code-block {
+  background-color: #010409;
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  overflow: auto;
+  position: relative;
+}
+
+.paste-code-block pre {
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  display: flex;
+  align-items: flex-start;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+
+.paste-code-block .line-numbers {
+  white-space: pre;
+  text-align: right;
+  padding: 1.25rem 0.75rem;
+  min-width: 3rem;
+  flex-shrink: 0;
+  border-right: 1px solid var(--ws-border);
+  color: var(--ws-muted);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.paste-code-block code {
+  flex: 1;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  background: transparent !important;
+}
+
+.code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--ws-surface);
+  border: 1px solid var(--ws-border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 0.5rem 1rem;
+}
+
+.code-toolbar .lang-badge {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: var(--ws-muted);
+  background-color: var(--ws-border);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.paste-code-block.has-toolbar {
+  border-radius: 0 0 8px 8px;
+}
+
+/* ── Paste list ── */
+.paste-row {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--ws-border);
+  transition: background 0.15s;
+}
+
+.paste-row:last-child {
+  border-bottom: none;
+}
+
+.paste-row:hover {
+  background-color: rgba(48, 54, 61, 0.4);
+}
+
+.paste-title-link {
+  color: var(--ws-accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.paste-title-link:hover {
+  text-decoration: underline;
+  color: #79c0ff;
+}
+
+.paste-meta {
+  font-size: 0.8rem;
+  color: var(--ws-muted);
+}
+
+/* ── Tags / Badges ── */
+.tag.is-language {
+  background-color: rgba(188, 140, 255, 0.15);
+  color: var(--ws-purple);
+  border: 1px solid rgba(188, 140, 255, 0.3);
+  font-family: monospace;
+  font-size: 0.7rem;
+}
+
+.tag.is-private {
+  background-color: rgba(248, 81, 73, 0.15);
+  color: var(--ws-red);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+}
+
+.tag.is-burn {
+  background-color: rgba(210, 153, 34, 0.15);
+  color: var(--ws-yellow);
+  border: 1px solid rgba(210, 153, 34, 0.3);
+}
+
+.tag.is-protected {
+  background-color: rgba(63, 185, 80, 0.15);
+  color: var(--ws-green);
+  border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+.tag.is-attachment {
+  background-color: rgba(139, 148, 158, 0.15);
+  color: var(--ws-muted);
+  border: 1px solid rgba(139, 148, 158, 0.3);
+}
+
+/* ── Notifications / Flash ── */
+.notification {
+  border-radius: 6px;
+}
+
+.notification.is-success {
+  background-color: rgba(63, 185, 80, 0.15);
+  color: var(--ws-green);
+  border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+.notification.is-danger {
+  background-color: rgba(248, 81, 73, 0.15);
+  color: var(--ws-red);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+}
+
+.notification.is-warning {
+  background-color: rgba(210, 153, 34, 0.15);
+  color: var(--ws-yellow);
+  border: 1px solid rgba(210, 153, 34, 0.3);
+}
+
+.notification.is-info {
+  background-color: rgba(88, 166, 255, 0.15);
+  color: var(--ws-accent);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+}
+
+/* ── Section / Title ── */
+.title, .subtitle {
+  color: var(--ws-text) !important;
+}
+
+.title.is-4, .title.is-5 {
+  color: #e6edf3 !important;
+}
+
+/* ── Table ── */
+.table {
+  background-color: transparent;
+  color: var(--ws-text);
+}
+
+.table th {
+  color: var(--ws-muted);
+  border-bottom: 1px solid var(--ws-border) !important;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td {
+  border-bottom: 1px solid var(--ws-border);
+  border-top: none;
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table.is-hoverable tbody tr:hover {
+  background-color: rgba(48, 54, 61, 0.5);
+}
+
+/* ── Admin sidebar / menu ── */
+.admin-menu .menu-label {
+  color: var(--ws-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+
+.admin-menu .menu-list a {
+  color: var(--ws-text);
+  border-radius: 6px;
+}
+
+.admin-menu .menu-list a:hover {
+  background-color: var(--ws-border);
+  color: #fff;
+}
+
+.admin-menu .menu-list a.is-active {
+  background-color: var(--ws-accent);
+  color: #0d1117;
+  font-weight: 600;
+}
+
+/* ── Stat cards ── */
+.stat-card {
+  background-color: var(--ws-surface);
+  border: 1px solid var(--ws-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ws-accent);
+  line-height: 1;
+}
+
+.stat-card .stat-label {
+  font-size: 0.8rem;
+  color: var(--ws-muted);
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Footer ── */
+footer {
+  background-color: var(--ws-surface) !important;
+  border-top: 1px solid var(--ws-border);
+  color: var(--ws-muted) !important;
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+footer a {
+  color: var(--ws-accent);
+}
+
+/* ── Misc ── */
+.divider-text {
+  text-align: center;
+  color: var(--ws-muted);
+  font-size: 0.8rem;
+  margin: 1rem 0;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.copy-btn:hover {
+  opacity: 1;
+}
+
+.search-bar .input {
+  border-radius: 6px 0 0 6px;
+}
+
+.search-bar .button {
+  border-radius: 0 6px 6px 0;
+}
+
+/* ── Pagination ── */
+.pagination-link, .pagination-previous, .pagination-next {
+  background-color: var(--ws-surface);
+  border-color: var(--ws-border);
+  color: var(--ws-text);
+}
+
+.pagination-link:hover, .pagination-previous:hover, .pagination-next:hover {
+  background-color: var(--ws-border);
+  border-color: var(--ws-border);
+  color: #fff;
+}
+
+.pagination-link.is-current {
+  background-color: var(--ws-accent);
+  border-color: var(--ws-accent);
+  color: #0d1117;
+}
+
+/* ── Attachment list ── */
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--ws-bg);
+  border: 1px solid var(--ws-border);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.attachment-item .attachment-name {
+  flex: 1;
+  color: var(--ws-accent);
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+.attachment-item .attachment-size {
+  color: var(--ws-muted);
+  font-size: 0.75rem;
+}
+
+/* ── Line numbers (hljs plugin) ── */
+.hljs-ln-numbers {
+  text-align: right;
+  padding-right: 1rem !important;
+  color: var(--ws-muted);
+  border-right: 1px solid var(--ws-border);
+  padding-left: 0.25rem !important;
+  user-select: none;
+}
+
+.hljs-ln-code {
+  padding-left: 1rem !important;
+}
+
+/* ── Scrollbar (webkit) ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--ws-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ws-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ws-muted);
+}

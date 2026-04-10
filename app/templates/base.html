@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+
+  <!-- Theme init — must run before CSS to prevent flash -->
+  <script>(function(){var t=localStorage.getItem('ws-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- highlight.js -->
+  <link id="hljs-theme-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <link id="hljs-theme-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" disabled />
+  <!-- Custom -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+  <div class="container">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="{{ url_for('main.index') }}">
+        <strong>{{ site_name }}</strong>
+      </a>
+      <a role="button" class="navbar-burger" data-target="navbar-menu" aria-label="menu" aria-expanded="false">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbar-menu" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="{{ url_for('main.index') }}">
+          <span class="icon"><i class="fas fa-home"></i></span>
+          <span>Home</span>
+        </a>
+        <a class="navbar-item" href="{{ url_for('main.new_paste') }}">
+          <span class="icon"><i class="fas fa-plus"></i></span>
+          <span>New Paste</span>
+        </a>
+      </div>
+
+      <div class="navbar-end">
+        <!-- Search -->
+        <div class="navbar-item">
+          <form action="{{ url_for('main.search') }}" method="get" class="field has-addons search-bar mb-0">
+            <div class="control">
+              <input class="input is-small" type="search" name="q" placeholder="Search pastes…"
+                     value="{{ request.args.get('q', '') }}" />
+            </div>
+            <div class="control">
+              <button type="submit" class="button is-small is-light">
+                <span class="icon"><i class="fas fa-search"></i></span>
+              </button>
+            </div>
+          </form>
+        </div>
+        <div class="navbar-item">
+          <button id="theme-toggle" class="button is-small is-ghost" aria-label="Toggle light/dark mode">
+            <span class="icon"><i id="theme-icon" class="fas fa-sun"></i></span>
+          </button>
+        </div>
+        <a class="navbar-item" href="{{ url_for('admin.dashboard') }}">
+          <span class="icon"><i class="fas fa-shield-halved"></i></span>
+          <span>admin</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Flash messages ── -->
+<div class="container mt-6 pt-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="notification is-{{ category }} mb-2">
+        <button class="delete"></button>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<!-- ── Main content ── -->
+<main class="container py-5" style="margin-top: 1rem;">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ── -->
+<footer>
+  <span><a href="https://github.com/redeuxx/whitespace" target="_blank" rel="noopener">{{ site_name }}</a> &mdash; {{ site_description }}</span>
+</footer>
+
+<!-- ── Scripts ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" data-cfasync="false"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}" data-cfasync="false"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

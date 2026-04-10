@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Search{% if query %}: {{ query }}{% endif %} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<h1 class="title is-4 mb-4">
+  <span class="icon"><i class="fas fa-search"></i></span>
+  Search Pastes
+</h1>
+
+<form action="{{ url_for('main.search') }}" method="get" class="mb-5">
+  <div class="field has-addons">
+    <div class="control is-expanded">
+      <input class="input" type="search" name="q" placeholder="Search titles and content…"
+             value="{{ query or '' }}" autofocus />
+    </div>
+    <div class="control">
+      <button type="submit" class="button is-primary">
+        <span class="icon"><i class="fas fa-search"></i></span>
+        <span>Search</span>
+      </button>
+    </div>
+  </div>
+  <p class="help">Searches titles and full content of all public, non-expired pastes.</p>
+</form>
+
+{% if query is not none %}
+  {% if results %}
+    <p class="paste-meta mb-3">
+      Found {{ pagination.total }} result{{ 's' if pagination.total != 1 else '' }}
+      for <strong style="color: var(--ws-text);">{{ query }}</strong>
+    </p>
+
+    <div class="box p-0">
+      {% for paste in results %}
+      <div class="paste-row">
+        <div class="is-flex-grow-1">
+          <div class="is-flex is-align-items-center mb-1" style="gap: 0.5rem; flex-wrap: wrap;">
+            <a href="{{ url_for('main.view_paste', slug=paste.slug) }}" class="paste-title-link">
+              {{ paste.title or 'Untitled' }}
+            </a>
+            {% if paste.language %}
+              <span class="tag is-language">{{ paste.language | lang_display }}</span>
+            {% endif %}
+            {% if paste.is_password_protected %}
+              <span class="tag is-protected">
+                <span class="icon is-small"><i class="fas fa-lock"></i></span>
+              </span>
+            {% endif %}
+          </div>
+          <div class="paste-meta">
+            {{ time_ago(paste.created_at) }}
+            {% if paste.expires_at %}
+              &bull; expires {{ time_until(paste.expires_at) }}
+            {% endif %}
+          </div>
+          <!-- Content snippet -->
+          {% set lower_content = paste.content.lower() %}
+          {% set lower_query = query.lower() %}
+          {% if lower_query in lower_content %}
+            {% set idx = lower_content.find(lower_query) %}
+            {% set start = [0, idx - 60]|max %}
+            {% set snippet = paste.content[start:idx + 120] %}
+            <p class="paste-meta mt-1" style="font-family: monospace; font-size: 0.78rem;">
+              {% if start > 0 %}&hellip;{% endif %}{{ snippet | e }}{% if (start + 120) < paste.content|length %}&hellip;{% endif %}
+            </p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if pagination and pagination.pages > 1 %}
+    <nav class="pagination is-centered mt-4" role="navigation">
+      {% if pagination.has_prev %}
+        <a class="pagination-previous" href="{{ url_for('main.search', q=query, page=pagination.prev_num) }}">Previous</a>
+      {% else %}
+        <a class="pagination-previous" disabled>Previous</a>
+      {% endif %}
+      {% if pagination.has_next %}
+        <a class="pagination-next" href="{{ url_for('main.search', q=query, page=pagination.next_num) }}">Next</a>
+      {% else %}
+        <a class="pagination-next" disabled>Next</a>
+      {% endif %}
+      <ul class="pagination-list">
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if page_num %}
+            <li>
+              <a class="pagination-link {% if page_num == pagination.page %}is-current{% endif %}"
+                 href="{{ url_for('main.search', q=query, page=page_num) }}">{{ page_num }}</a>
+            </li>
+          {% else %}
+            <li><span class="pagination-ellipsis">&hellip;</span></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </nav>
+    {% endif %}
+
+  {% elif query %}
+    <div class="box has-text-centered py-5">
+      <span class="icon is-large" style="color: var(--ws-muted);"><i class="fas fa-search fa-2x"></i></span>
+      <p class="mt-3" style="color: var(--ws-muted);">
+        No results found for <strong style="color: var(--ws-text);">{{ query }}</strong>.
+      </p>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

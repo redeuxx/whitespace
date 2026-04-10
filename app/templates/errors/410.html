@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}410 Gone — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="columns is-centered">
+  <div class="column is-6 has-text-centered py-6">
+    <p class="title is-1" style="color: var(--ws-yellow);">410</p>
+    <h1 class="title is-4">Paste Expired</h1>
+    <p style="color: var(--ws-muted);">This paste has expired and is no longer available.</p>
+    <a href="{{ url_for('main.index') }}" class="button is-light mt-4">&larr; Home</a>
+  </div>
+</div>
+{% endblock %}

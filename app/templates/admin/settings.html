@@ -1,0 +1,66 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<h1 class="title is-4 mb-4">
+  <span class="icon"><i class="fas fa-cog"></i></span>
+  Site Settings
+</h1>
+
+<div class="box">
+  <form method="post" action="{{ url_for('admin.settings') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+    {% for schema in settings_schema %}
+    <div class="field mb-5">
+      <label class="label" for="{{ schema.key }}">{{ schema.label }}</label>
+      <div class="control">
+        {% if schema.type == 'toggle' %}
+          <label class="checkbox" style="color: var(--ws-text);">
+            <input type="checkbox" id="{{ schema.key }}" name="{{ schema.key }}"
+                   {% if current_settings.get(schema.key, schema.default) == 'true' %}checked{% endif %} />
+            &nbsp;Enable
+          </label>
+        {% else %}
+          <input class="input" type="text" id="{{ schema.key }}" name="{{ schema.key }}"
+                 value="{{ current_settings.get(schema.key, schema.default) }}" />
+        {% endif %}
+      </div>
+      <p class="help">{{ schema.help }}</p>
+    </div>
+    {% endfor %}
+
+    <hr style="background-color: var(--ws-border); height: 1px; border: none;" />
+
+    <div class="field is-grouped mt-4">
+      <div class="control">
+        <button type="submit" class="button is-primary">
+          <span class="icon"><i class="fas fa-save"></i></span>
+          <span>Save Settings</span>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- .env info -->
+<div class="box mt-4" style="border-color: var(--ws-yellow);">
+  <h2 class="title is-6 mb-2" style="color: var(--ws-yellow);">
+    <span class="icon"><i class="fas fa-info-circle"></i></span>
+    Environment Variables (.env)
+  </h2>
+  <p class="help" style="color: var(--ws-muted);">
+    Some settings can only be changed in your <code>.env</code> file and require a server restart:
+  </p>
+  <table class="table is-narrow mt-2" style="font-size: 0.8rem; background: transparent;">
+    <tbody>
+      <tr><td style="color: var(--ws-muted);">ADMIN_USERNAME / ADMIN_PASSWORD</td><td>Admin credentials</td></tr>
+      <tr><td style="color: var(--ws-muted);">MAX_FILE_SIZE_MB</td><td>Per-file upload size limit</td></tr>
+      <tr><td style="color: var(--ws-muted);">MAX_ATTACHMENTS</td><td>Max files per paste</td></tr>
+      <tr><td style="color: var(--ws-muted);">RATE_LIMIT_PASTE / RATE_LIMIT_SEARCH</td><td>Rate limiting rules</td></tr>
+      <tr><td style="color: var(--ws-muted);">PASTES_PER_PAGE</td><td>Pagination size</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ site_name }} — Public Pastes{% endblock %}
+
+{% block content %}
+<div class="columns is-vcentered mb-4">
+  <div class="column">
+    <h1 class="title is-4 mb-1">Recent Pastes</h1>
+    <p class="subtitle is-6" style="color: var(--ws-muted);">{{ site_description }}</p>
+  </div>
+</div>
+
+{% if not public_listing %}
+  <div class="box has-text-centered py-6">
+    <span class="icon is-large" style="color: var(--ws-muted);"><i class="fas fa-eye-slash fa-2x"></i></span>
+    <p class="mt-3" style="color: var(--ws-muted);">Public listing is currently disabled.</p>
+    <a href="{{ url_for('main.new_paste') }}" class="button is-primary mt-4">Create a Paste</a>
+  </div>
+
+{% elif pastes %}
+  <div class="box p-0">
+    {% for paste in pastes %}
+    <div class="paste-row">
+      <div class="is-flex-grow-1">
+        <div class="is-flex is-align-items-center gap-2 mb-1" style="gap: 0.5rem; flex-wrap: wrap;">
+          <a href="{{ url_for('main.view_paste', slug=paste.slug) }}" class="paste-title-link">
+            {{ paste.title or 'Untitled' }}
+          </a>
+          {% if paste.language %}
+            <span class="tag is-language">{{ paste.language | lang_display }}</span>
+          {% endif %}
+          {% if paste.is_password_protected %}
+            <span class="tag is-protected">
+              <span class="icon is-small"><i class="fas fa-lock"></i></span>
+              <span>Protected</span>
+            </span>
+          {% endif %}
+          {% if paste.burn_after_read %}
+            <span class="tag is-burn">
+              <span class="icon is-small"><i class="fas fa-fire"></i></span>
+              <span>Burn</span>
+            </span>
+          {% endif %}
+          {% if paste.parent_slug %}
+            <span class="tag is-light" style="font-size:0.7rem;">
+              <span class="icon is-small"><i class="fas fa-code-fork"></i></span>
+              <span>Fork</span>
+            </span>
+          {% endif %}
+          {% if paste.attachments %}
+            <span class="tag is-attachment" style="font-size:0.7rem;">
+              <span class="icon is-small"><i class="fas fa-paperclip"></i></span>
+              <span>{{ paste.attachments|length }}</span>
+            </span>
+          {% endif %}
+        </div>
+        <div class="paste-meta">
+          {{ time_ago(paste.created_at) }}
+          {% if paste.expires_at %}
+            &bull; expires {{ time_until(paste.expires_at) }}
+          {% endif %}
+          &bull; <a href="{{ url_for('main.raw_paste', slug=paste.slug) }}" style="color: var(--ws-muted);">raw</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if pagination and pagination.pages > 1 %}
+  <nav class="pagination is-centered mt-4" role="navigation" aria-label="pagination">
+    {% if pagination.has_prev %}
+      <a class="pagination-previous" href="{{ url_for('main.index', page=pagination.prev_num) }}">Previous</a>
+    {% else %}
+      <a class="pagination-previous" disabled>Previous</a>
+    {% endif %}
+    {% if pagination.has_next %}
+      <a class="pagination-next" href="{{ url_for('main.index', page=pagination.next_num) }}">Next</a>
+    {% else %}
+      <a class="pagination-next" disabled>Next</a>
+    {% endif %}
+    <ul class="pagination-list">
+      {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if page_num %}
+          <li>
+            <a class="pagination-link {% if page_num == pagination.page %}is-current{% endif %}"
+               href="{{ url_for('main.index', page=page_num) }}">{{ page_num }}</a>
+          </li>
+        {% else %}
+          <li><span class="pagination-ellipsis">&hellip;</span></li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+
+{% else %}
+  <div class="box has-text-centered py-6">
+    <span class="icon is-large" style="color: var(--ws-muted);"><i class="fas fa-inbox fa-2x"></i></span>
+    <p class="mt-3" style="color: var(--ws-muted);">No public pastes yet.</p>
+    <a href="{{ url_for('main.new_paste') }}" class="button is-primary mt-4">Create the First Paste</a>
+  </div>
+{% endif %}
+{% endblock %}

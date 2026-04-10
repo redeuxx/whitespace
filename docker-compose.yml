@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8118:8118"
+    volumes:
+      - uploads_data:/app/uploads
+      - db_data:/app/instance
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+
+volumes:
+  uploads_data:
+  db_data:

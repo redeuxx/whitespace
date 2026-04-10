@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if fork %}Fork of {{ fork.title }}{% else %}New Paste{% endif %} — {{ site_name }}
+{% endblock %}
+
+{% block content %}
+<div class="columns is-centered">
+  <div class="column is-10">
+
+    <div class="is-flex is-align-items-center mb-4" style="gap: 0.75rem;">
+      <h1 class="title is-4 mb-0">
+        {% if fork %}
+          <span class="icon"><i class="fas fa-code-fork"></i></span>
+          Fork Paste
+        {% else %}
+          <span class="icon"><i class="fas fa-plus"></i></span>
+          New Paste
+        {% endif %}
+      </h1>
+      {% if fork %}
+        <span class="tag is-light">from
+          <a href="{{ url_for('main.view_paste', slug=fork.slug) }}" class="ml-1">{{ fork.slug }}</a>
+        </span>
+      {% endif %}
+    </div>
+
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('main.new_paste') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <!-- Title -->
+      <div class="field">
+        <label class="label" for="title">Title</label>
+        <div class="control has-icons-left">
+          <input class="input" type="text" id="title" name="title"
+                 placeholder="Auto-extracted from content if left blank"
+                 value="{{ form.get('title', '') }}" maxlength="200" />
+          <span class="icon is-left"><i class="fas fa-heading"></i></span>
+        </div>
+        <p class="help">Leave blank to auto-extract from the first meaningful line.</p>
+      </div>
+
+      <!-- Content -->
+      <div class="field">
+        <label class="label" for="content">Content <span style="color: var(--ws-red);">*</span></label>
+        <div class="control">
+          <textarea class="textarea paste-editor" id="content" name="content"
+                    placeholder="Paste your code or text here…"
+                    spellcheck="false" required>{{ form.get('content', '') }}</textarea>
+        </div>
+      </div>
+
+      <!-- Language + Expiry row -->
+      <div class="columns">
+        <div class="column">
+          <div class="field">
+            <label class="label" for="language-select">Language</label>
+            <div class="control">
+              <div class="select is-fullwidth">
+                <select id="language-select" name="language">
+                  <option value="">Auto-detect</option>
+                  {% for lang in languages %}
+                    <option value="{{ lang }}"
+                      {% if form.get('language') == lang %}selected{% endif %}>
+                      {{ lang }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <p class="help" id="lang-auto-hint"
+               {% if form.get('language') %}style="display:none"{% endif %}>
+              Pygments will detect the language automatically.
+            </p>
+          </div>
+        </div>
+
+        <div class="column">
+          <div class="field">
+            <label class="label" for="expiry">Expiration</label>
+            <div class="control">
+              <div class="select is-fullwidth">
+                <select id="expiry" name="expiry">
+                  {% for value, label in expiry_options %}
+                    <option value="{{ value }}"
+                      {% if value == 'never' %}selected{% endif %}>
+                      {{ label }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visibility + Password row -->
+      <div class="columns">
+        <div class="column">
+          <div class="field">
+            <label class="label">Visibility</label>
+            <div class="control">
+              <label class="radio" style="color: var(--ws-text); margin-right: 1.5rem;">
+                <input type="radio" name="visibility" value="public"
+                       {% if form.get('visibility') != 'private' %}checked{% endif %} />
+                <span class="icon is-small"><i class="fas fa-globe"></i></span>
+                Public
+              </label>
+              <label class="radio" style="color: var(--ws-text);">
+                <input type="radio" name="visibility" value="private"
+                       {% if form.get('visibility') == 'private' %}checked{% endif %} />
+                <span class="icon is-small"><i class="fas fa-lock"></i></span>
+                Private
+              </label>
+            </div>
+            <p class="help">Private pastes are not listed publicly.</p>
+          </div>
+        </div>
+
+        <div class="column">
+          <div class="field">
+            <label class="label" for="password">Password (optional)</label>
+            <div class="control has-icons-left has-icons-right">
+              <input class="input" type="password" id="password" name="password"
+                     placeholder="Leave blank for no password" autocomplete="new-password" />
+              <span class="icon is-left"><i class="fas fa-key"></i></span>
+              <span class="icon is-right toggle-password" data-target="password"
+                    style="pointer-events: all; cursor: pointer;">
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
+            <p class="help">Viewers will need this password to read the paste.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attachments -->
+      <div class="field">
+        <label class="label">Attachments</label>
+        <div class="control">
+          <div class="file has-name is-fullwidth">
+            <label class="file-label">
+              <input class="file-input" type="file" id="attachments" name="attachments"
+                     multiple accept="*/*" />
+              <span class="file-cta" style="background: var(--ws-border); border-color: var(--ws-border); color: var(--ws-text);">
+                <span class="file-icon"><i class="fas fa-upload"></i></span>
+                <span class="file-label">Choose files…</span>
+              </span>
+              <span class="file-name" style="background: var(--ws-bg); border-color: var(--ws-border); color: var(--ws-muted);">
+                No files selected
+              </span>
+            </label>
+          </div>
+        </div>
+        <div id="file-list" data-max="{{ max_attachments }}" class="mt-2"></div>
+        <p class="help">Up to 10 files. Each file is always downloaded (not previewed inline).</p>
+      </div>
+
+      <!-- Submit -->
+      <div class="field is-grouped mt-5">
+        <div class="control">
+          <button type="submit" class="button is-primary">
+            <span class="icon"><i class="fas fa-paper-plane"></i></span>
+            <span>{% if fork %}Fork Paste{% else %}Create Paste{% endif %}</span>
+          </button>
+        </div>
+        <div class="control">
+          <a href="{{ url_for('main.index') }}" class="button is-light">Cancel</a>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

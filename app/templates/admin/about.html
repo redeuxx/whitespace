@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+
+{% block title %}About{% endblock %}
+
+{% block content %}
+<h1 class="title is-4 mb-4">
+  <span class="icon"><i class="fas fa-info-circle"></i></span>
+  About
+</h1>
+
+<div class="box">
+  <table class="table is-fullwidth is-striped">
+    <tbody>
+      <tr>
+        <td class="has-text-weight-semibold" style="width: 12rem;">Installed version</td>
+        <td>v{{ current_version }}</td>
+      </tr>
+      <tr>
+        <td class="has-text-weight-semibold">Latest version</td>
+        <td>
+          {% if fetch_error %}
+            <span class="has-text-danger">Could not fetch — {{ fetch_error }}</span>
+          {% else %}
+            v{{ latest_version }}
+            {% if latest_version == current_version %}
+              <span class="tag is-success is-light ml-2">Up to date</span>
+            {% else %}
+              <span class="tag is-warning is-light ml-2">Update available</span>
+            {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td class="has-text-weight-semibold">Repository</td>
+        <td>
+          <a href="https://github.com/redeuxx/whitespace" target="_blank" rel="noopener">
+            github.com/redeuxx/whitespace
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

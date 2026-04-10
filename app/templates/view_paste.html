@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}{{ paste.title or 'Untitled' }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+
+{% if paste.burn_after_read %}
+<div id="burn-warning" class="notification is-warning mb-4">
+  <button class="delete"></button>
+  <span class="icon"><i class="fas fa-fire"></i></span>
+  {% if burn_preview %}
+  <strong>Burn after reading:</strong> This paste will be permanently destroyed the next time this paste is viewed.
+  {% else %}
+  <strong>Burn after reading:</strong> This paste has been destroyed and will not be accessible again.
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ── Paste header ── -->
+<div class="box mb-4">
+  <div class="columns is-vcentered is-mobile">
+    <div class="column">
+      <h1 class="title is-5 mb-1">{{ paste.title or 'Untitled' }}</h1>
+      <div class="is-flex is-align-items-center" style="flex-wrap: wrap; gap: 0.4rem;">
+        {% if paste.language %}
+          <span class="tag is-language">{{ paste.language | lang_display }}</span>
+        {% endif %}
+        {% if paste.is_private %}
+          <span class="tag is-private">
+            <span class="icon is-small"><i class="fas fa-eye-slash"></i></span>
+            <span>Private</span>
+          </span>
+        {% endif %}
+        {% if paste.is_password_protected %}
+          <span class="tag is-protected">
+            <span class="icon is-small"><i class="fas fa-lock"></i></span>
+            <span>Protected</span>
+          </span>
+        {% endif %}
+        {% if paste.parent_slug %}
+          <span class="tag is-light" style="font-size:0.75rem;">
+            <span class="icon is-small"><i class="fas fa-code-fork"></i></span>
+            <span>Fork of
+              <a href="{{ url_for('main.view_paste', slug=paste.parent_slug) }}"
+                 style="color: inherit;">&nbsp;{{ paste.parent_slug }}</a>
+            </span>
+          </span>
+        {% endif %}
+        <span class="paste-meta ml-1">
+          {{ time_ago(paste.created_at) }}
+        </span>
+        {% if paste.expires_at %}
+          <span class="paste-meta">
+            &bull; expires {{ time_until(paste.expires_at) }}
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="column is-narrow">
+      <div class="buttons are-small">
+        <button id="copy-link-btn" class="button is-light" title="Copy link to clipboard">
+          <span class="icon"><i class="fas fa-link"></i></span>
+          <span>Copy Link</span>
+        </button>
+        <button id="copy-btn" class="button is-light" title="Copy to clipboard">
+          <span class="icon"><i class="fas fa-copy"></i></span>
+          <span>Copy</span>
+        </button>
+        <a href="{{ url_for('main.raw_paste', slug=paste.slug) }}"
+           class="button is-light" title="Raw view" target="_blank">
+          <span class="icon"><i class="fas fa-code"></i></span>
+          <span>Raw</span>
+        </a>
+        <a href="{{ url_for('main.fork_paste', slug=paste.slug) }}"
+           class="button is-light" title="Fork this paste">
+          <span class="icon"><i class="fas fa-code-fork"></i></span>
+          <span>Fork</span>
+        </a>
+        {% if current_user.is_authenticated %}
+        <form method="post" action="{{ url_for('admin.delete_paste', slug=paste.slug) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="button is-danger is-small"
+                  title="Delete paste" data-confirm="Delete paste {{ paste.slug }}?">
+            <span class="icon"><i class="fas fa-trash"></i></span>
+            <span>Delete</span>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Code block ── -->
+<div class="code-toolbar">
+  <span class="lang-badge">{{ (paste.language or 'plaintext') | lang_display }}</span>
+  <span class="paste-meta" style="font-size:0.75rem;">{{ paste.slug }}</span>
+</div>
+<div class="paste-code-block has-toolbar" style="position:relative;">
+  <pre><code class="hljs-target{% if paste.language %} language-{{ paste.language }}{% endif %}">{{ paste.content }}</code></pre>
+</div>
+
+<!-- ── Attachments ── -->
+{% if paste.attachments %}
+<div class="box mt-4">
+  <h2 class="title is-6 mb-3">
+    <span class="icon"><i class="fas fa-paperclip"></i></span>
+    Attachments ({{ paste.attachments|length }})
+  </h2>
+  {% for att in paste.attachments %}
+  <div class="attachment-item">
+    <span class="icon" style="color: var(--ws-muted);"><i class="fas fa-file"></i></span>
+    <span class="attachment-name">{{ att.original_filename }}</span>
+    <span class="attachment-size">{{ att.size_human }}</span>
+    <a href="{{ url_for('main.download_attachment', slug=paste.slug, attachment_id=att.id) }}"
+       class="button is-small is-light">
+      <span class="icon"><i class="fas fa-download"></i></span>
+      <span>Download</span>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if paste.language == 'x86asm' %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/x86asm.min.js" data-cfasync="false"></script>
+{% endif %}
+{% endblock %}

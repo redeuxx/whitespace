@@ -1,0 +1,137 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="title is-4 mb-5">
+  <span class="icon"><i class="fas fa-chart-line"></i></span>
+  Dashboard
+</h1>
+
+<!-- Stats grid -->
+<div class="columns is-multiline mb-5">
+  <div class="column is-2">
+    <div class="stat-card">
+      <div class="stat-value">{{ total_pastes }}</div>
+      <div class="stat-label">Total Pastes</div>
+    </div>
+  </div>
+  <div class="column is-2">
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--ws-green);">{{ public_pastes }}</div>
+      <div class="stat-label">Public</div>
+    </div>
+  </div>
+  <div class="column is-2">
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--ws-purple);">{{ private_pastes }}</div>
+      <div class="stat-label">Private</div>
+    </div>
+  </div>
+  <div class="column is-2">
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--ws-yellow);">{{ total_views }}</div>
+      <div class="stat-label">Total Views</div>
+    </div>
+  </div>
+  <div class="column is-2">
+    <div class="stat-card">
+      <div class="stat-value">{{ pastes_today }}</div>
+      <div class="stat-label">Today</div>
+    </div>
+  </div>
+  <div class="column is-2">
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--ws-red);">{{ banned_ips }}</div>
+      <div class="stat-label">Banned IPs</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick actions -->
+<div class="columns mb-5">
+  <div class="column is-narrow">
+    <form method="post" action="{{ url_for('admin.purge_expired') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="button is-warning"
+              data-confirm="Purge all {{ expired_count }} expired paste(s)?">
+        <span class="icon"><i class="fas fa-trash-clock"></i></span>
+        <span>Purge Expired ({{ expired_count }})</span>
+      </button>
+    </form>
+  </div>
+  <div class="column is-narrow">
+    <a href="{{ url_for('main.new_paste') }}" class="button is-primary" target="_blank">
+      <span class="icon"><i class="fas fa-plus"></i></span>
+      <span>New Paste</span>
+    </a>
+  </div>
+</div>
+
+<!-- Recent pastes -->
+<h2 class="title is-6 mb-3">Recent Pastes</h2>
+<div class="box p-0">
+  <table class="table is-fullwidth is-hoverable">
+    <thead>
+      <tr>
+        <th>Slug</th>
+        <th>Title</th>
+        <th>Lang</th>
+        <th>Views</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for paste in recent_pastes %}
+      <tr>
+        <td>
+          <a href="{{ url_for('main.view_paste', slug=paste.slug) }}"
+             style="font-family: monospace; color: var(--ws-accent);" target="_blank">
+            {{ paste.slug }}
+          </a>
+        </td>
+        <td>{{ paste.title or '—' }}</td>
+        <td>
+          {% if paste.language %}
+            <span class="tag is-language">{{ paste.language | lang_display }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>{{ paste.view_count }}</td>
+        <td>
+          {% if paste.is_private %}
+            <span class="tag is-private">Private</span>
+          {% else %}
+            <span class="tag is-success is-light">Public</span>
+          {% endif %}
+          {% if paste.is_expired %}
+            <span class="tag is-danger is-light">Expired</span>
+          {% endif %}
+          {% if paste.burn_after_read %}
+            <span class="tag is-burn">Burn</span>
+          {% endif %}
+        </td>
+        <td class="paste-meta">{{ time_ago(paste.created_at) }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin.delete_paste', slug=paste.slug) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="button is-danger is-small is-light"
+                    data-confirm="Delete paste {{ paste.slug }}?">
+              <span class="icon"><i class="fas fa-trash"></i></span>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="has-text-centered" style="color: var(--ws-muted);">No pastes yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="mt-3">
+  <a href="{{ url_for('admin.pastes') }}" class="button is-light is-small">
+    View all pastes &rarr;
+  </a>
+</div>
+{% endblock %}

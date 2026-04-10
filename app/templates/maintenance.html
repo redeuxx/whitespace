@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Maintenance — {{ site_name }}{% endblock %}
+{% block content %}
+<div class="columns is-centered">
+  <div class="column is-6 has-text-centered py-6">
+    <span class="icon is-large" style="color: var(--ws-yellow);"><i class="fas fa-tools fa-3x"></i></span>
+    <h1 class="title is-3 mt-4">Under Maintenance</h1>
+    <p class="subtitle" style="color: var(--ws-muted);">
+      {{ site_name }} is temporarily unavailable. Please check back soon.
+    </p>
+    <a href="{{ url_for('admin.login') }}" class="button is-light mt-4">Admin Login</a>
+  </div>
+</div>
+{% endblock %}
