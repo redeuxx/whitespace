@@ -1,12 +1,15 @@
 import base64
 import html
+import ipaddress
 import os
 import random
 import re
 import secrets
+import socket
 import string
 from datetime import datetime, timedelta, timezone
 from urllib.error import URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from werkzeug.utils import secure_filename
@@ -102,8 +105,32 @@ def is_single_url(content):
     return bool(_SINGLE_URL_RE.match(content.strip()))
 
 
+def _is_safe_url(url):
+    """Return True only if the URL resolves to a public, routable IP address."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ('http', 'https'):
+            return False
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        addr = ipaddress.ip_address(socket.getaddrinfo(hostname, None)[0][4][0])
+        return (
+            not addr.is_private
+            and not addr.is_loopback
+            and not addr.is_link_local
+            and not addr.is_reserved
+            and not addr.is_multicast
+            and not addr.is_unspecified
+        )
+    except (OSError, ValueError):
+        return False
+
+
 def fetch_url_title(url, timeout=5):
     """Fetch the <title> of a URL. Returns the title string or None on failure."""
+    if not _is_safe_url(url):
+        return None
     try:
         req = Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; Whitespace/1.0)'})
         with urlopen(req, timeout=timeout) as resp:
