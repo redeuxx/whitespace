@@ -105,34 +105,44 @@ def is_single_url(content):
     return bool(_SINGLE_URL_RE.match(content.strip()))
 
 
-def _is_safe_url(url):
-    """Return True only if the URL resolves to a public, routable IP address."""
-    try:
-        parsed = urlparse(url)
-        if parsed.scheme not in ('http', 'https'):
-            return False
-        hostname = parsed.hostname
-        if not hostname:
-            return False
-        addr = ipaddress.ip_address(socket.getaddrinfo(hostname, None)[0][4][0])
-        return (
-            not addr.is_private
-            and not addr.is_loopback
-            and not addr.is_link_local
-            and not addr.is_reserved
-            and not addr.is_multicast
-            and not addr.is_unspecified
-        )
-    except (OSError, ValueError):
-        return False
+def _resolve_safe_host(url):
+    """
+    Resolve the URL's hostname to a verified public IP.
+    Returns (ip_str, ParseResult) or raises ValueError/OSError if unsafe.
+    Callers must use the returned ip_str for the actual request to prevent
+    DNS rebinding between the safety check and the fetch.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in ('http', 'https'):
+        raise ValueError("unsafe scheme")
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("no hostname")
+    ip_str = socket.getaddrinfo(hostname, None)[0][4][0]
+    addr = ipaddress.ip_address(ip_str)
+    if (addr.is_private or addr.is_loopback or addr.is_link_local
+            or addr.is_reserved or addr.is_multicast or addr.is_unspecified):
+        raise ValueError("private/reserved IP")
+    return ip_str, parsed
 
 
 def fetch_url_title(url, timeout=5):
     """Fetch the <title> of a URL. Returns the title string or None on failure."""
-    if not _is_safe_url(url):
+    try:
+        ip_str, parsed = _resolve_safe_host(url)
+    except (OSError, ValueError):
         return None
     try:
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; Whitespace/1.0)'})
+        # Use the pre-verified IP directly to prevent DNS rebinding.
+        # Wrap IPv6 addresses in brackets per RFC 2732.
+        netloc_ip = f'[{ip_str}]' if ':' in ip_str else ip_str
+        if parsed.port:
+            netloc_ip = f'{netloc_ip}:{parsed.port}'
+        safe_url = parsed._replace(netloc=netloc_ip).geturl()
+        req = Request(safe_url, headers={
+            'User-Agent': 'Mozilla/5.0 (compatible; Whitespace/1.0)',
+            'Host': parsed.netloc,
+        })
         with urlopen(req, timeout=timeout) as resp:
             # Only read the first 32 KB — the title is always in the <head>
             chunk = resp.read(32768).decode('utf-8', errors='replace')
