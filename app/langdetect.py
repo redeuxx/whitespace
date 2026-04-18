@@ -283,7 +283,7 @@ def _manual_detect(text):
 
     # Markdown — headings or list + emphasis
     if re.search(r'^#{1,6}\s+\S', text, M) and \
-       re.search(r'(\*\*|__|`|\[.+\]\(.+\))', text):
+       re.search(r'(\*\*|__|`|\[[^\[\]]+\]\([^()]+\))', text):
         return 'markdown'
 
     # Makefile — tab-indented recipes
