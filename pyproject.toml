@@ -1,6 +1,6 @@
 [project]
 name = "whitespace"
-version = "0.1.9.1"
+version = "0.1.9.2"
 description = "A self-hosted pastebin built with Flask. Supports syntax highlighting, file attachments, password-protected pastes, expiry options, and an admin panel."
 readme = "README.md"
 requires-python = ">=3.14"
