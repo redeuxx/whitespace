@@ -1,7 +1,8 @@
 import ipaddress
 import tomllib
-import urllib.request
 import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, timedelta, timezone
 
 from flask import (
@@ -83,8 +84,12 @@ def login():
         if (username == current_app.config['ADMIN_USERNAME'] and
                 password == current_app.config['ADMIN_PASSWORD']):
             login_user(AdminUser(), remember=False)
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('admin.dashboard'))
+            next_page = request.args.get('next', '')
+            next_page = next_page.replace('\\', '')
+            parsed = urllib.parse.urlparse(next_page)
+            if not parsed.netloc and not parsed.scheme:
+                return redirect(next_page or url_for('admin.dashboard'))
+            return redirect(url_for('admin.dashboard'))
         flash('Invalid credentials.', 'danger')
 
     return render_template('admin/login.html')
@@ -183,7 +188,11 @@ def delete_paste(slug):
     # If coming from the paste's own view page it no longer exists — go home
     if f'/p/{slug}' in referrer:
         return redirect(url_for('main.index'))
-    return redirect(referrer or url_for('admin.pastes'))
+    normalized_referrer = referrer.replace('\\', '')
+    parsed_referrer = urllib.parse.urlparse(normalized_referrer)
+    if referrer and not parsed_referrer.scheme and not parsed_referrer.netloc:
+        return redirect(normalized_referrer)
+    return redirect(url_for('admin.pastes'))
 
 
 
