@@ -108,7 +108,7 @@
   {{ site_name }} Admin Panel
 </footer>
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}" data-cfasync="false"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
