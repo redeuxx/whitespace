@@ -436,7 +436,7 @@ wheels = [
 
 [[package]]
 name = "whitespace"
-version = "0.1.9"
+version = "0.1.9.2"
 source = { virtual = "." }
 dependencies = [
     { name = "cryptography" },

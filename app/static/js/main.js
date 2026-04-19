@@ -1,6 +1,6 @@
 /* ── Whitespace — main.js ── */
 
-document.addEventListener('DOMContentLoaded', () => {
+function initWhitespace() {
 
   // THEME TOGGLE
   const themeToggle = document.getElementById('theme-toggle');
@@ -162,7 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => burnWarning.classList.add('is-hidden'), 8000);
   }
 
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initWhitespace);
+} else {
+  initWhitespace();
+}
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 
