@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}{{ site_name }}{% endblock %}</title>
 
-  <!-- Theme init — must run before CSS to prevent flash -->
-  <script>(function(){var t=localStorage.getItem('ws-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <!-- Theme init — must run before CSS to prevent flash. data-cfasync="false" keeps Cloudflare Rocket Loader from deferring this block. -->
+  <script data-cfasync="false">(function(){var t=localStorage.getItem('ws-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
 
   <!-- Bulma CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" />

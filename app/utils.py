@@ -1,12 +1,15 @@
 import base64
 import html
+import ipaddress
 import os
 import random
 import re
 import secrets
+import socket
 import string
 from datetime import datetime, timedelta, timezone
 from urllib.error import URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from werkzeug.utils import secure_filename
@@ -102,10 +105,44 @@ def is_single_url(content):
     return bool(_SINGLE_URL_RE.match(content.strip()))
 
 
+def _resolve_safe_host(url):
+    """
+    Resolve the URL's hostname to a verified public IP.
+    Returns (ip_str, ParseResult) or raises ValueError/OSError if unsafe.
+    Callers must use the returned ip_str for the actual request to prevent
+    DNS rebinding between the safety check and the fetch.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in ('http', 'https'):
+        raise ValueError("unsafe scheme")
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("no hostname")
+    ip_str = socket.getaddrinfo(hostname, None)[0][4][0]
+    addr = ipaddress.ip_address(ip_str)
+    if (addr.is_private or addr.is_loopback or addr.is_link_local
+            or addr.is_reserved or addr.is_multicast or addr.is_unspecified):
+        raise ValueError("private/reserved IP")
+    return ip_str, parsed
+
+
 def fetch_url_title(url, timeout=5):
     """Fetch the <title> of a URL. Returns the title string or None on failure."""
     try:
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0 (compatible; Whitespace/1.0)'})
+        ip_str, parsed = _resolve_safe_host(url)
+    except (OSError, ValueError):
+        return None
+    try:
+        # Use the pre-verified IP directly to prevent DNS rebinding.
+        # Wrap IPv6 addresses in brackets per RFC 2732.
+        netloc_ip = f'[{ip_str}]' if ':' in ip_str else ip_str
+        if parsed.port:
+            netloc_ip = f'{netloc_ip}:{parsed.port}'
+        safe_url = parsed._replace(netloc=netloc_ip).geturl()
+        req = Request(safe_url, headers={
+            'User-Agent': 'Mozilla/5.0 (compatible; Whitespace/1.0)',
+            'Host': parsed.netloc,
+        })
         with urlopen(req, timeout=timeout) as resp:
             # Only read the first 32 KB — the title is always in the <head>
             chunk = resp.read(32768).decode('utf-8', errors='replace')

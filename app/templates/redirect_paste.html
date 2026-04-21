@@ -85,7 +85,7 @@
 
 {% block scripts %}
 {% if not is_creator %}
-<script>
+<script data-cfasync="false">
 (function () {
   const DELAY = 5;
   const bar = document.getElementById('progress-bar');
