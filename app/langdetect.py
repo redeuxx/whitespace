@@ -81,7 +81,7 @@ def _pygments_detect(text):
         # 'import ', which causes false positives for Go, Java, Swift, etc.
         # Only trust its score when there is an actual Python shebang.
         if hljs_name == 'python' and score > 0:
-            if not re.match(r'#!.*python', text[:50]):
+            if not re.search(r'python', text[:50]):
                 score = 0.0
 
         if score > best_score:
@@ -174,7 +174,7 @@ def _manual_detect(text):
         return 'kotlin'
 
     # Scala
-    if re.search(r'\bdef\s+\w+.*:', text) and \
+    if re.search(r'\bdef\s+\w+[^:\n]*:', text) and \
        re.search(r'\b(object|trait|case\s+class)\s+\w+', text):
         return 'scala'
 
@@ -205,7 +205,7 @@ def _manual_detect(text):
         return 'javascript'
     # JSX without TS: React import + JSX syntax
     if re.search(r'\bfrom\s+["\']react["\']', text, re.IGNORECASE) and \
-       re.search(r'return\s*\(?\s*<[A-Z]\w*[\s/>]', text):
+       re.search(r'return[\s(]*<[A-Z]\w*[\s/>]', text):
         return 'javascript'
 
     # Elixir — defmodule is unique; must come before Ruby (both use def/end)
@@ -266,7 +266,7 @@ def _manual_detect(text):
 
     # CSS — selector block + at least one recognisable CSS property
     _CSS_PROPS = r'\b(color|font|margin|padding|border|background|display|width|height|position|top|left|right|bottom|flex|grid|overflow|opacity|cursor|z-index|text-|list-|box-|align-|justify-)\b'
-    if re.search(r'[\w.#*\[\]:]+\s*\{', text) and \
+    if re.search(r'[^\s{]+[ \t]*\{', text) and \
        re.search(_CSS_PROPS, text) and \
        re.search(r':\s*[\w#"\'(]', text) and \
        re.search(r';\s*\}', text):
