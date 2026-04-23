@@ -174,7 +174,7 @@ def _manual_detect(text):
         return 'kotlin'
 
     # Scala
-    if re.search(r'\bdef\s+\w+[^:\n]*:', text) and \
+    if re.search(r'\bdef\s+\w+[^:\n]{0,500}:', text) and \
        re.search(r'\b(object|trait|case\s+class)\s+\w+', text):
         return 'scala'
 
