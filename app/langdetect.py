@@ -266,7 +266,7 @@ def _manual_detect(text):
 
     # CSS — selector block + at least one recognisable CSS property
     _CSS_PROPS = r'\b(color|font|margin|padding|border|background|display|width|height|position|top|left|right|bottom|flex|grid|overflow|opacity|cursor|z-index|text-|list-|box-|align-|justify-)\b'
-    if re.search(r'[^\s{]+[ \t]*\{', text) and \
+    if re.search(r'[^\s{]{1,200}[ \t]*\{', text) and \
        re.search(_CSS_PROPS, text) and \
        re.search(r':\s*[\w#"\'(]', text) and \
        re.search(r';\s*\}', text):
