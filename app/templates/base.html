@@ -67,10 +67,12 @@
             <span class="icon"><i id="theme-icon" class="fas fa-sun"></i></span>
           </button>
         </div>
+        {% if current_user.is_authenticated %}
         <a class="navbar-item" href="{{ url_for('admin.dashboard') }}">
           <span class="icon"><i class="fas fa-shield-halved"></i></span>
           <span>admin</span>
         </a>
+        {% endif %}
       </div>
     </div>
   </div>
