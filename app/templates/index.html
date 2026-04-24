@@ -26,32 +26,33 @@
           <a href="{{ url_for('main.view_paste', slug=paste.slug) }}" class="paste-title-link">
             {{ paste.title or 'Untitled' }}
           </a>
-          {% if paste.language %}
-            <span class="tag is-language">{{ paste.language | lang_display }}</span>
-          {% endif %}
           {% if paste.is_password_protected %}
             <span class="tag is-protected">
               <span class="icon is-small"><i class="fas fa-lock"></i></span>
               <span>Protected</span>
             </span>
-          {% endif %}
-          {% if paste.burn_after_read %}
-            <span class="tag is-burn">
-              <span class="icon is-small"><i class="fas fa-fire"></i></span>
-              <span>Burn</span>
-            </span>
-          {% endif %}
-          {% if paste.parent_slug %}
-            <span class="tag is-light" style="font-size:0.7rem;">
-              <span class="icon is-small"><i class="fas fa-code-fork"></i></span>
-              <span>Fork</span>
-            </span>
-          {% endif %}
-          {% if paste.attachments %}
-            <span class="tag is-attachment" style="font-size:0.7rem;">
-              <span class="icon is-small"><i class="fas fa-paperclip"></i></span>
-              <span>{{ paste.attachments|length }}</span>
-            </span>
+          {% else %}
+            {% if paste.language %}
+              <span class="tag is-language">{{ paste.language | lang_display }}</span>
+            {% endif %}
+            {% if paste.burn_after_read %}
+              <span class="tag is-burn">
+                <span class="icon is-small"><i class="fas fa-fire"></i></span>
+                <span>Burn</span>
+              </span>
+            {% endif %}
+            {% if paste.parent_slug %}
+              <span class="tag is-light" style="font-size:0.7rem;">
+                <span class="icon is-small"><i class="fas fa-code-fork"></i></span>
+                <span>Fork</span>
+              </span>
+            {% endif %}
+            {% if paste.attachments %}
+              <span class="tag is-attachment" style="font-size:0.7rem;">
+                <span class="icon is-small"><i class="fas fa-paperclip"></i></span>
+                <span>{{ paste.attachments|length }}</span>
+              </span>
+            {% endif %}
           {% endif %}
         </div>
         <div class="paste-meta">

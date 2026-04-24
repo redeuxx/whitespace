@@ -39,13 +39,15 @@
             <a href="{{ url_for('main.view_paste', slug=paste.slug) }}" class="paste-title-link">
               {{ paste.title or 'Untitled' }}
             </a>
-            {% if paste.language %}
-              <span class="tag is-language">{{ paste.language | lang_display }}</span>
-            {% endif %}
             {% if paste.is_password_protected %}
               <span class="tag is-protected">
                 <span class="icon is-small"><i class="fas fa-lock"></i></span>
+                <span>Protected</span>
               </span>
+            {% else %}
+              {% if paste.language %}
+                <span class="tag is-language">{{ paste.language | lang_display }}</span>
+              {% endif %}
             {% endif %}
           </div>
           <div class="paste-meta">
