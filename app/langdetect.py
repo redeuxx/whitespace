@@ -174,7 +174,7 @@ def _manual_detect(text):
         return 'kotlin'
 
     # Scala
-    if re.search(r'\bdef\s+\w+[^:\n]*:', text) and \
+    if re.search(r'\bdef\s+\w+[^:\n]{0,500}:', text) and \
        re.search(r'\b(object|trait|case\s+class)\s+\w+', text):
         return 'scala'
 
@@ -266,7 +266,7 @@ def _manual_detect(text):
 
     # CSS — selector block + at least one recognisable CSS property
     _CSS_PROPS = r'\b(color|font|margin|padding|border|background|display|width|height|position|top|left|right|bottom|flex|grid|overflow|opacity|cursor|z-index|text-|list-|box-|align-|justify-)\b'
-    if re.search(r'[^\s{]+[ \t]*\{', text) and \
+    if re.search(r'[^\s{]{1,200}[ \t]*\{', text) and \
        re.search(_CSS_PROPS, text) and \
        re.search(r':\s*[\w#"\'(]', text) and \
        re.search(r';\s*\}', text):
