@@ -111,14 +111,12 @@ def new_paste():
         password = request.form.get('password', '').strip()
         expiry_str = request.form.get('expiry', 'never')
 
-        # Auto-extract title if not provided and paste is not password protected
         if not title and not password:
             if is_single_url(content):
                 title = fetch_url_title(content.strip()) or extract_title(content)
             else:
                 title = extract_title(content)
 
-        # Auto-detect language if not specified
         if not language or language == 'auto':
             language = detect_language(content)
 
@@ -143,7 +141,6 @@ def new_paste():
         db.session.add(paste)
         db.session.flush()  # get paste.id before saving attachments
 
-        # Handle file attachments
         files = request.files.getlist('attachments')
         max_att = current_app.config['MAX_ATTACHMENTS']
         max_size = current_app.config['MAX_FILE_SIZE']
@@ -156,7 +153,6 @@ def new_paste():
             if saved >= max_att:
                 flash(f'Maximum {max_att} attachments allowed. Some files were skipped.', 'warning')
                 break
-            # Check size by reading into memory limit
             f.seek(0, 2)
             size = f.tell()
             f.seek(0)

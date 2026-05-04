@@ -14,6 +14,8 @@ from urllib.request import Request, urlopen
 
 from werkzeug.utils import secure_filename
 
+from .langdetect import HLJS_LANGUAGES, PYGMENTS_TO_HLJS, detect_language  # noqa: F401
+
 # Encryption format versions
 _V1_PREFIX = 'enc:v1:'  # legacy: PBKDF2-SHA256 + AES-128-CBC (Fernet)
 _V2_PREFIX = 'enc:v2:'  # current: Argon2id + AES-256-GCM
@@ -73,8 +75,6 @@ def decrypt_content(content: str, password: str, slug: str, secret_key: str) -> 
         key = _derive_key_v1(password, slug, secret_key)
         return Fernet(key).decrypt(token.encode()).decode()
     return content  # unencrypted legacy paste
-
-from .langdetect import HLJS_LANGUAGES, PYGMENTS_TO_HLJS, detect_language  # noqa: F401
 
 EXPIRY_OPTIONS = [
     ('burn', 'Burn after reading'),
@@ -185,10 +185,6 @@ def parse_expiry(expiry_str):
         return now + timedelta(weeks=1), False
     else:  # 'never' or default
         return None, False
-
-
-def allowed_file(filename):
-    return '.' in filename and len(filename) <= 255
 
 
 def save_attachment(file, upload_folder):

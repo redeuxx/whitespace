@@ -1,4 +1,5 @@
 import ipaddress
+import os
 import tomllib
 import urllib.error
 import urllib.parse
@@ -18,7 +19,7 @@ from ..utils import EXPIRY_OPTIONS, time_ago, time_until
 admin_bp = Blueprint('admin', __name__)
 
 
-# ── Admin User (single account, credentials from .env) ────────────────────────
+# ADMIN USER
 
 class AdminUser(UserMixin):
     id = 'admin'
@@ -34,7 +35,7 @@ def load_user(user_id):
     return None
 
 
-# ── IP Ban Check ──────────────────────────────────────────────────────────────
+# IP BAN CHECK
 
 @admin_bp.before_request
 def check_banned():
@@ -59,11 +60,10 @@ def check_banned():
             continue
 
 
-# ── Context Processor ──────────────────────────────────────────────────────────
+# CONTEXT PROCESSOR
 
 @admin_bp.context_processor
 def inject_globals():
-    from ..models import SiteSetting
     return {
         'site_name': SiteSetting.get('site_name', 'Whitespace'),
         'time_ago': time_ago,
@@ -71,7 +71,7 @@ def inject_globals():
     }
 
 
-# ── Login / Logout ─────────────────────────────────────────────────────────────
+# LOGIN / LOGOUT
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -103,7 +103,7 @@ def logout():
     return redirect(url_for('admin.login'))
 
 
-# ── Dashboard ──────────────────────────────────────────────────────────────────
+# DASHBOARD
 
 @admin_bp.route('/')
 @admin_bp.route('')
@@ -137,7 +137,7 @@ def dashboard():
     )
 
 
-# ── Pastes Management ──────────────────────────────────────────────────────────
+# PASTES MANAGEMENT
 
 @admin_bp.route('/pastes')
 @login_required
@@ -172,10 +172,8 @@ def pastes():
 @login_required
 def delete_paste(slug):
     paste = Paste.query.filter_by(slug=slug).first_or_404()
-    # Remove attachment files
     for att in paste.attachments:
         try:
-            import os
             path = os.path.join(current_app.config['UPLOAD_FOLDER'], att.stored_filename)
             if os.path.exists(path):
                 os.remove(path)
@@ -185,15 +183,9 @@ def delete_paste(slug):
     db.session.commit()
     flash(f'Paste {slug} deleted.', 'success')
     referrer = request.referrer or ''
-    # If coming from the paste's own view page it no longer exists — go home
     if f'/p/{slug}' in referrer:
         return redirect(url_for('main.index'))
-    normalized_referrer = referrer.replace('\\', '')
-    parsed_referrer = urllib.parse.urlparse(normalized_referrer)
-    if referrer and not parsed_referrer.scheme and not parsed_referrer.netloc:
-        return redirect(normalized_referrer)
     return redirect(url_for('admin.pastes'))
-
 
 
 @admin_bp.route('/pastes/purge-expired', methods=['POST'])
@@ -208,7 +200,6 @@ def purge_expired():
     for paste in expired:
         for att in paste.attachments:
             try:
-                import os
                 path = os.path.join(current_app.config['UPLOAD_FOLDER'], att.stored_filename)
                 if os.path.exists(path):
                     os.remove(path)
@@ -220,7 +211,7 @@ def purge_expired():
     return redirect(url_for('admin.pastes'))
 
 
-# ── IP Management ──────────────────────────────────────────────────────────────
+# IP MANAGEMENT
 
 @admin_bp.route('/ips')
 @login_required
@@ -283,7 +274,7 @@ def unban_ip(ban_id):
     return redirect(url_for('admin.ips'))
 
 
-# ── Site Settings ──────────────────────────────────────────────────────────────
+# SITE SETTINGS
 
 SETTINGS_SCHEMA = [
     {
@@ -343,7 +334,7 @@ def settings():
     )
 
 
-# ── About ──────────────────────────────────────────────────────────────────────
+# ABOUT
 
 _REMOTE_PYPROJECT = (
     'https://raw.githubusercontent.com/redeuxx/whitespace/master/pyproject.toml'
