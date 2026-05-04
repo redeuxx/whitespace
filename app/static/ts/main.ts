@@ -152,6 +152,43 @@ function initWhitespace(): void {
     });
   }
 
+  // IMAGE LIGHTBOX
+  const lightbox = document.getElementById('image-lightbox');
+  const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement | null;
+  const lightboxCaption = document.getElementById('lightbox-caption');
+  const lightboxClose = lightbox?.querySelector('.ws-lightbox-close');
+  const lightboxBackdrop = lightbox?.querySelector('.ws-lightbox-backdrop');
+
+  function openLightbox(url: string, name: string): void {
+    if (!lightbox || !lightboxImg || !lightboxCaption) return;
+    lightboxImg.src = url;
+    lightboxImg.alt = name;
+    lightboxCaption.textContent = name;
+    lightbox.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox(): void {
+    if (!lightbox || !lightboxImg) return;
+    lightbox.style.display = 'none';
+    lightboxImg.src = '';
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll<HTMLElement>('.attachment-image-trigger').forEach(el => {
+    el.addEventListener('click', () => {
+      const url = el.dataset.lightboxUrl;
+      const name = el.dataset.lightboxName ?? '';
+      if (url) openLightbox(url, name);
+    });
+  });
+
+  lightboxClose?.addEventListener('click', closeLightbox);
+  lightboxBackdrop?.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && lightbox?.style.display === 'flex') closeLightbox();
+  });
+
   // CONFIRM DANGEROUS ACTIONS
   document.querySelectorAll<HTMLElement>('[data-confirm]').forEach(el => {
     el.addEventListener('click', e => {

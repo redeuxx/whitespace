@@ -102,7 +102,7 @@
   <pre><code class="hljs-target{% if paste.language %} language-{{ paste.language }}{% endif %}">{{ paste.content }}</code></pre>
 </div>
 
-<!-- ── Attachments ── -->
+<!-- ATTACHMENTS -->
 {% if paste.attachments %}
 <div class="box mt-4">
   <h2 class="title is-6 mb-3">
@@ -110,9 +110,20 @@
     Attachments ({{ paste.attachments|length }})
   </h2>
   {% for att in paste.attachments %}
+  {% set ext = att.original_filename.rsplit('.', 1)[-1].lower() if '.' in att.original_filename else '' %}
+  {% set is_image = ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'] %}
   <div class="attachment-item">
-    <span class="icon" style="color: var(--ws-muted);"><i class="fas fa-file"></i></span>
+    <span class="icon" style="color: var(--ws-muted);">
+      <i class="fas {{ 'fa-image' if is_image else 'fa-file' }}"></i>
+    </span>
+    {% if is_image %}
+    <span class="attachment-name attachment-image-trigger"
+          style="cursor:pointer;"
+          data-lightbox-url="{{ url_for('main.view_attachment', slug=paste.slug, attachment_id=att.id) }}"
+          data-lightbox-name="{{ att.original_filename }}">{{ att.original_filename }}</span>
+    {% else %}
     <span class="attachment-name">{{ att.original_filename }}</span>
+    {% endif %}
     <span class="attachment-size">{{ att.size_human }}</span>
     <a href="{{ url_for('main.download_attachment', slug=paste.slug, attachment_id=att.id) }}"
        class="button is-small is-light">
@@ -121,6 +132,16 @@
     </a>
   </div>
   {% endfor %}
+</div>
+
+<!-- IMAGE LIGHTBOX -->
+<div id="image-lightbox" class="ws-lightbox" style="display:none;" aria-modal="true" role="dialog">
+  <div class="ws-lightbox-backdrop"></div>
+  <div class="ws-lightbox-content">
+    <button class="ws-lightbox-close" aria-label="Close">&times;</button>
+    <img id="lightbox-img" src="" alt="" class="ws-lightbox-img" />
+    <p id="lightbox-caption" class="ws-lightbox-caption"></p>
+  </div>
 </div>
 {% endif %}
 

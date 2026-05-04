@@ -143,6 +143,43 @@ function initWhitespace() {
             }
         });
     }
+    // IMAGE LIGHTBOX
+    const lightbox = document.getElementById('image-lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+    const lightboxClose = lightbox === null || lightbox === void 0 ? void 0 : lightbox.querySelector('.ws-lightbox-close');
+    const lightboxBackdrop = lightbox === null || lightbox === void 0 ? void 0 : lightbox.querySelector('.ws-lightbox-backdrop');
+    function openLightbox(url, name) {
+        if (!lightbox || !lightboxImg || !lightboxCaption)
+            return;
+        lightboxImg.src = url;
+        lightboxImg.alt = name;
+        lightboxCaption.textContent = name;
+        lightbox.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+        if (!lightbox || !lightboxImg)
+            return;
+        lightbox.style.display = 'none';
+        lightboxImg.src = '';
+        document.body.style.overflow = '';
+    }
+    document.querySelectorAll('.attachment-image-trigger').forEach(el => {
+        el.addEventListener('click', () => {
+            var _a;
+            const url = el.dataset.lightboxUrl;
+            const name = (_a = el.dataset.lightboxName) !== null && _a !== void 0 ? _a : '';
+            if (url)
+                openLightbox(url, name);
+        });
+    });
+    lightboxClose === null || lightboxClose === void 0 ? void 0 : lightboxClose.addEventListener('click', closeLightbox);
+    lightboxBackdrop === null || lightboxBackdrop === void 0 ? void 0 : lightboxBackdrop.addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && (lightbox === null || lightbox === void 0 ? void 0 : lightbox.style.display) === 'flex')
+            closeLightbox();
+    });
     // CONFIRM DANGEROUS ACTIONS
     document.querySelectorAll('[data-confirm]').forEach(el => {
         el.addEventListener('click', e => {

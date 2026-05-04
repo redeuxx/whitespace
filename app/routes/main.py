@@ -365,6 +365,27 @@ def download_attachment(slug, attachment_id):
     )
 
 
+# VIEW ATTACHMENT (inline, for lightbox)
+
+@main_bp.route('/p/<slug>/view/<int:attachment_id>')
+def view_attachment(slug, attachment_id):
+    paste = Paste.query.filter_by(slug=slug).first_or_404()
+
+    if paste.is_expired:
+        abort(410)
+
+    if paste.is_password_protected and slug not in session.get('unlocked_pastes', []):
+        abort(403)
+
+    att = Attachment.query.filter_by(id=attachment_id, paste_id=paste.id).first_or_404()
+    return send_from_directory(
+        current_app.config['UPLOAD_FOLDER'],
+        att.stored_filename,
+        as_attachment=False,
+        download_name=att.original_filename,
+    )
+
+
 # SEARCH
 
 @main_bp.route('/search')
