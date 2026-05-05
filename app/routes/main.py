@@ -361,7 +361,7 @@ def download_attachment(slug, attachment_id):
     )
 
 
-# VIEW ATTACHMENT (inline, for lightbox)
+# VIEW ATTACHMENT (inline, for lightbox / PDF viewer)
 
 @main_bp.route('/p/<slug>/view/<int:attachment_id>')
 def view_attachment(slug, attachment_id):
@@ -374,6 +374,28 @@ def view_attachment(slug, attachment_id):
         abort(403)
 
     att = Attachment.query.filter_by(id=attachment_id, paste_id=paste.id).first_or_404()
+
+    ext = att.original_filename.rsplit('.', 1)[-1].lower() if '.' in att.original_filename else ''
+
+    if ext == 'pdf':
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], att.stored_filename)
+        try:
+            with open(file_path, 'rb') as f:
+                magic = f.read(5)
+        except OSError:
+            abort(404)
+        if magic != b'%PDF-':
+            abort(415)
+        response = make_response(send_from_directory(
+            current_app.config['UPLOAD_FOLDER'],
+            att.stored_filename,
+            as_attachment=False,
+            download_name=att.original_filename,
+            mimetype='application/pdf',
+        ))
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
+
     return send_from_directory(
         current_app.config['UPLOAD_FOLDER'],
         att.stored_filename,

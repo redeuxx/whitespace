@@ -180,6 +180,43 @@ function initWhitespace() {
         if (e.key === 'Escape' && (lightbox === null || lightbox === void 0 ? void 0 : lightbox.style.display) === 'flex')
             closeLightbox();
     });
+    // PDF VIEWER
+    const pdfViewer = document.getElementById('pdf-viewer');
+    const pdfFrame = document.getElementById('pdf-frame');
+    const pdfCaption = document.getElementById('pdf-caption');
+    const pdfClose = pdfViewer === null || pdfViewer === void 0 ? void 0 : pdfViewer.querySelector('.ws-lightbox-close');
+    const pdfBackdrop = pdfViewer === null || pdfViewer === void 0 ? void 0 : pdfViewer.querySelector('.ws-lightbox-backdrop');
+    function openPdfViewer(url, name) {
+        if (!pdfViewer || !pdfFrame || !pdfCaption)
+            return;
+        pdfFrame.src = url;
+        pdfFrame.title = name;
+        pdfCaption.textContent = name;
+        pdfViewer.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closePdfViewer() {
+        if (!pdfViewer || !pdfFrame)
+            return;
+        pdfViewer.style.display = 'none';
+        pdfFrame.src = '';
+        document.body.style.overflow = '';
+    }
+    document.querySelectorAll('.attachment-pdf-trigger').forEach(el => {
+        el.addEventListener('click', () => {
+            var _a;
+            const url = el.dataset.pdfUrl;
+            const name = (_a = el.dataset.pdfName) !== null && _a !== void 0 ? _a : '';
+            if (url)
+                openPdfViewer(url, name);
+        });
+    });
+    pdfClose === null || pdfClose === void 0 ? void 0 : pdfClose.addEventListener('click', closePdfViewer);
+    pdfBackdrop === null || pdfBackdrop === void 0 ? void 0 : pdfBackdrop.addEventListener('click', closePdfViewer);
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && (pdfViewer === null || pdfViewer === void 0 ? void 0 : pdfViewer.style.display) === 'flex')
+            closePdfViewer();
+    });
     // CONFIRM DANGEROUS ACTIONS
     document.querySelectorAll('[data-confirm]').forEach(el => {
         el.addEventListener('click', e => {

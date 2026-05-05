@@ -189,6 +189,43 @@ function initWhitespace(): void {
     if (e.key === 'Escape' && lightbox?.style.display === 'flex') closeLightbox();
   });
 
+  // PDF VIEWER
+  const pdfViewer = document.getElementById('pdf-viewer');
+  const pdfFrame = document.getElementById('pdf-frame') as HTMLIFrameElement | null;
+  const pdfCaption = document.getElementById('pdf-caption');
+  const pdfClose = pdfViewer?.querySelector('.ws-lightbox-close');
+  const pdfBackdrop = pdfViewer?.querySelector('.ws-lightbox-backdrop');
+
+  function openPdfViewer(url: string, name: string): void {
+    if (!pdfViewer || !pdfFrame || !pdfCaption) return;
+    pdfFrame.src = url;
+    pdfFrame.title = name;
+    pdfCaption.textContent = name;
+    pdfViewer.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePdfViewer(): void {
+    if (!pdfViewer || !pdfFrame) return;
+    pdfViewer.style.display = 'none';
+    pdfFrame.src = '';
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll<HTMLElement>('.attachment-pdf-trigger').forEach(el => {
+    el.addEventListener('click', () => {
+      const url = el.dataset.pdfUrl;
+      const name = el.dataset.pdfName ?? '';
+      if (url) openPdfViewer(url, name);
+    });
+  });
+
+  pdfClose?.addEventListener('click', closePdfViewer);
+  pdfBackdrop?.addEventListener('click', closePdfViewer);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && pdfViewer?.style.display === 'flex') closePdfViewer();
+  });
+
   // CONFIRM DANGEROUS ACTIONS
   document.querySelectorAll<HTMLElement>('[data-confirm]').forEach(el => {
     el.addEventListener('click', e => {

@@ -112,15 +112,21 @@
   {% for att in paste.attachments %}
   {% set ext = att.original_filename.rsplit('.', 1)[-1].lower() if '.' in att.original_filename else '' %}
   {% set is_image = ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'] %}
+  {% set is_pdf = ext == 'pdf' %}
   <div class="attachment-item">
     <span class="icon" style="color: var(--ws-muted);">
-      <i class="fas {{ 'fa-image' if is_image else 'fa-file' }}"></i>
+      <i class="fas {{ 'fa-image' if is_image else ('fa-file-pdf' if is_pdf else 'fa-file') }}"></i>
     </span>
     {% if is_image %}
     <span class="attachment-name attachment-image-trigger"
           style="cursor:pointer;"
           data-lightbox-url="{{ url_for('main.view_attachment', slug=paste.slug, attachment_id=att.id) }}"
           data-lightbox-name="{{ att.original_filename }}">{{ att.original_filename }}</span>
+    {% elif is_pdf %}
+    <span class="attachment-name attachment-pdf-trigger"
+          style="cursor:pointer;"
+          data-pdf-url="{{ url_for('main.view_attachment', slug=paste.slug, attachment_id=att.id) }}"
+          data-pdf-name="{{ att.original_filename }}">{{ att.original_filename }}</span>
     {% else %}
     <span class="attachment-name">{{ att.original_filename }}</span>
     {% endif %}
@@ -141,6 +147,16 @@
     <button class="ws-lightbox-close" aria-label="Close">&times;</button>
     <img id="lightbox-img" src="" alt="" class="ws-lightbox-img" />
     <p id="lightbox-caption" class="ws-lightbox-caption"></p>
+  </div>
+</div>
+
+<!-- PDF VIEWER -->
+<div id="pdf-viewer" class="ws-lightbox" style="display:none;" aria-modal="true" role="dialog">
+  <div class="ws-lightbox-backdrop"></div>
+  <div class="ws-lightbox-content ws-pdf-content">
+    <button class="ws-lightbox-close" aria-label="Close">&times;</button>
+    <iframe id="pdf-frame" src="" title="" class="ws-pdf-frame"></iframe>
+    <p id="pdf-caption" class="ws-lightbox-caption"></p>
   </div>
 </div>
 {% endif %}
