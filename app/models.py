@@ -40,6 +40,11 @@ class Paste(db.Model):
     def is_password_protected(self):
         return self.password_hash is not None
 
+    @property
+    def is_redirect(self):
+        from .utils import is_single_url
+        return is_single_url(self.content)
+
     def __repr__(self):
         return f'<Paste {self.slug}>'
 

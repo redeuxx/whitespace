@@ -48,6 +48,12 @@
               {% if paste.language %}
                 <span class="tag is-language">{{ paste.language | lang_display }}</span>
               {% endif %}
+              {% if paste.is_redirect %}
+                <span class="tag is-redirect">
+                  <span class="icon is-small"><i class="fas fa-arrow-up-right-from-square"></i></span>
+                  <span>Redirect</span>
+                </span>
+              {% endif %}
             {% endif %}
           </div>
           <div class="paste-meta">
