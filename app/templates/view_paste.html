@@ -38,13 +38,10 @@
           </span>
         {% endif %}
         {% if paste.parent_slug %}
-          <span class="tag is-light" style="font-size:0.75rem;">
+          <a href="{{ url_for('main.view_paste', slug=paste.parent_slug) }}" class="tag is-light" style="font-size:0.75rem;">
             <span class="icon is-small"><i class="fas fa-code-fork"></i></span>
-            <span>Fork of
-              <a href="{{ url_for('main.view_paste', slug=paste.parent_slug) }}"
-                 style="color: inherit;">&nbsp;{{ parent_paste.title if parent_paste else paste.parent_slug }}</a>
-            </span>
-          </span>
+            <span>Fork of &nbsp;{{ parent_paste.title if parent_paste else paste.parent_slug }}</span>
+          </a>
         {% endif %}
         <span class="paste-meta ml-1">
           {{ time_ago(paste.created_at) }}
