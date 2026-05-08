@@ -42,7 +42,7 @@
             <span class="icon is-small"><i class="fas fa-code-fork"></i></span>
             <span>Fork of
               <a href="{{ url_for('main.view_paste', slug=paste.parent_slug) }}"
-                 style="color: inherit;">&nbsp;{{ paste.parent_slug }}</a>
+                 style="color: inherit;">&nbsp;{{ parent_paste.title if parent_paste else paste.parent_slug }}</a>
             </span>
           </span>
         {% endif %}

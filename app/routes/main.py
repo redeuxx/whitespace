@@ -240,6 +240,10 @@ def view_paste(slug):
             session.modified = True
             return render_template('password.html', paste=paste)
 
+    parent_paste = None
+    if paste.parent_slug:
+        parent_paste = Paste.query.filter_by(slug=paste.parent_slug).first()
+
     # Check if this is the creator's one-time preview (doesn't burn or count)
     previews = session.get('burn_previews', [])
     is_creator_preview = paste.burn_after_read and slug in previews
@@ -250,7 +254,8 @@ def view_paste(slug):
         if is_single_url(paste.content):
             return render_template('redirect_paste.html', paste=paste, burn_preview=True,
                                    redirect_url=paste.content.strip())
-        return render_template('view_paste.html', paste=paste, burn_preview=True)
+        return render_template('view_paste.html', paste=paste, burn_preview=True,
+                               parent_paste=parent_paste)
 
     # Increment view count
     paste.view_count += 1
@@ -270,7 +275,8 @@ def view_paste(slug):
                                                  redirect_url=paste.content.strip(),
                                                  is_creator=is_url_creator))
     else:
-        response = make_response(render_template('view_paste.html', paste=paste, burn_preview=False))
+        response = make_response(render_template('view_paste.html', paste=paste, burn_preview=False,
+                                                 parent_paste=parent_paste))
 
     if burn:
         try:
