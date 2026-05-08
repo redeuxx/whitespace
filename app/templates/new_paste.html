@@ -27,6 +27,7 @@
 
     <form method="post" enctype="multipart/form-data" action="{{ url_for('main.new_paste') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {% if fork %}<input type="hidden" name="parent_slug" value="{{ fork.slug }}" />{% endif %}
 
       <!-- Title -->
       <div class="field">

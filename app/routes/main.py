@@ -127,6 +127,8 @@ def new_paste():
         if password:
             content = encrypt_content(content, password, slug, current_app.config['SECRET_KEY'])
 
+        parent_slug = request.form.get('parent_slug', '').strip() or None
+
         paste = Paste(
             slug=slug,
             title=title,
@@ -137,6 +139,7 @@ def new_paste():
             expires_at=expires_at,
             burn_after_read=burn_after_read,
             ip_address=get_client_ip(),
+            parent_slug=parent_slug,
         )
         db.session.add(paste)
         db.session.flush()  # get paste.id before saving attachments
