@@ -3,7 +3,7 @@
     "target": "ES2017",
     "lib": ["ES2017", "DOM"],
     "strict": true,
-    "module": "None",
+    "module": "ESNext",
     "outDir": "app/static/js",
     "rootDir": "app/static/ts",
     "sourceMap": false
