@@ -84,7 +84,7 @@ werkzeug==3.1.7
     #   whitespace
 wrapt==2.2.0
     # via deprecated
-wtforms==3.2.1
+wtforms==3.2.2
     # via
     #   flask-wtf
     #   whitespace
