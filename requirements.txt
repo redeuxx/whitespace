@@ -77,7 +77,7 @@ typing-extensions==4.15.0
     #   flask-limiter
     #   limits
     #   sqlalchemy
-werkzeug==3.1.7
+werkzeug==3.1.8
     # via
     #   flask
     #   flask-login
