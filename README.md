@@ -27,7 +27,7 @@ cp .env.example .env
 docker compose up --build -d
 ```
 
-App runs at [http://localhost:8118](http://localhost:8118), admin at `/admin`.
+App runs at [http://localhost:8118](http://localhost:8118), admin at `/admin`. This app is meant to be run behind a reverse proxy that provides SSL.
 
 ## Updating (Docker)
 
