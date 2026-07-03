@@ -405,12 +405,23 @@ def view_attachment(slug, attachment_id):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         return response
 
-    return send_from_directory(
+    # Only render a fixed set of non-scriptable image types inline. Everything
+    # else (html, svg, etc.) is forced to download so the browser never executes
+    # attacker-controlled content on this origin. nosniff blocks MIME sniffing.
+    INLINE_IMAGE_TYPES = {
+        'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+        'gif': 'image/gif', 'webp': 'image/webp',
+    }
+    inline_mime = INLINE_IMAGE_TYPES.get(ext)
+    response = make_response(send_from_directory(
         current_app.config['UPLOAD_FOLDER'],
         att.stored_filename,
-        as_attachment=False,
+        as_attachment=inline_mime is None,
         download_name=att.original_filename,
-    )
+        mimetype=inline_mime or 'application/octet-stream',
+    ))
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 # SEARCH

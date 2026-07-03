@@ -212,3 +212,49 @@ class TestSearchRoute:
     def test_private_paste_excluded_from_search(self, client, private_paste):
         rv = client.get('/search?q=Secret')
         assert b'Private Paste' not in rv.data
+
+
+class TestAttachmentServing:
+    """Regression: uploaded files must never render inline as active content."""
+
+    def _make_paste_with_attachment(self, app, filename, body=b'x'):
+        import os
+        import secrets
+        from app.extensions import db
+        from app.models import Attachment, Paste
+
+        paste = Paste(slug='attslug1', title='Att', content='c',
+                      language='plaintext', is_private=False, burn_after_read=False)
+        db.session.add(paste)
+        db.session.flush()
+        ext = os.path.splitext(filename)[1]
+        stored = secrets.token_hex(16) + ext
+        with open(os.path.join(app.config['UPLOAD_FOLDER'], stored), 'wb') as f:
+            f.write(body)
+        att = Attachment(paste_id=paste.id, original_filename=filename,
+                         stored_filename=stored, file_size=len(body))
+        db.session.add(att)
+        db.session.commit()
+        return paste.slug, att.id
+
+    def test_html_attachment_forced_to_download(self, app, client):
+        slug, att_id = self._make_paste_with_attachment(
+            app, 'evil.html', b'<script>alert(1)</script>')
+        rv = client.get(f'/p/{slug}/view/{att_id}')
+        assert rv.status_code == 200
+        assert 'text/html' not in rv.headers.get('Content-Type', '')
+        assert 'attachment' in rv.headers.get('Content-Disposition', '')
+        assert rv.headers.get('X-Content-Type-Options') == 'nosniff'
+
+    def test_svg_attachment_forced_to_download(self, app, client):
+        slug, att_id = self._make_paste_with_attachment(app, 'x.svg', b'<svg/>')
+        rv = client.get(f'/p/{slug}/view/{att_id}')
+        assert 'attachment' in rv.headers.get('Content-Disposition', '')
+        assert rv.headers.get('X-Content-Type-Options') == 'nosniff'
+
+    def test_png_attachment_served_inline(self, app, client):
+        slug, att_id = self._make_paste_with_attachment(app, 'ok.png')
+        rv = client.get(f'/p/{slug}/view/{att_id}')
+        assert rv.headers.get('Content-Type') == 'image/png'
+        assert 'attachment' not in rv.headers.get('Content-Disposition', '')
+        assert rv.headers.get('X-Content-Type-Options') == 'nosniff'
