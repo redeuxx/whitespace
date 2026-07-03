@@ -82,7 +82,7 @@ werkzeug==3.1.8
     #   flask
     #   flask-login
     #   whitespace
-wrapt==2.2.1
+wrapt==2.2.2
     # via deprecated
 wtforms==3.2.2
     # via
