@@ -4,7 +4,7 @@ alembic==1.18.5
     # via flask-migrate
 blinker==1.9.0
     # via flask
-cffi==2.0.0 ; platform_python_implementation != 'PyPy'
+cffi==2.1.0 ; platform_python_implementation != 'PyPy'
     # via cryptography
 click==8.4.2
     # via flask
