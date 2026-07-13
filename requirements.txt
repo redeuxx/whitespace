@@ -71,7 +71,7 @@ sqlalchemy==2.0.51
     # via
     #   alembic
     #   flask-sqlalchemy
-typing-extensions==4.15.0
+typing-extensions==4.16.0
     # via
     #   alembic
     #   flask-limiter
