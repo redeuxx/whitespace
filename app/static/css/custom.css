@@ -71,6 +71,7 @@ html, body {
   color: var(--ws-text);
   min-height: 100vh;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
 }
 
 /* ── Navbar ── */
