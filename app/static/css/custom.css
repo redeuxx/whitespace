@@ -513,12 +513,17 @@ footer a {
 
 .attachment-item .attachment-name {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--ws-accent);
   font-family: monospace;
   font-size: 0.875rem;
 }
 
 .attachment-item .attachment-size {
+  flex-shrink: 0;
   color: var(--ws-muted);
   font-size: 0.75rem;
 }
