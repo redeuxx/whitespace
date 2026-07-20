@@ -159,6 +159,16 @@ html, body {
   border-color: var(--ws-muted) !important;
 }
 
+.paste-title-col {
+  min-width: 0;
+}
+
+.paste-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Code / Paste area ── */
 .paste-editor {
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
