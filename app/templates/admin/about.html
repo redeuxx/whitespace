@@ -19,7 +19,7 @@
         <td class="has-text-weight-semibold">Latest version</td>
         <td>
           {% if fetch_error %}
-            <span class="has-text-danger">Could not fetch — {{ fetch_error }}</span>
+            <span class="has-text-danger">Could not fetch - {{ fetch_error }}</span>
           {% else %}
             v{{ latest_version }}
             {% if latest_version == current_version %}

@@ -92,11 +92,11 @@
             {{ paste.slug }}
           </a>
         </td>
-        <td>{{ paste.title or '—' }}</td>
+        <td>{{ paste.title or '-' }}</td>
         <td>
           {% if paste.language %}
             <span class="tag is-language">{{ paste.language | lang_display }}</span>
-          {% else %}—{% endif %}
+          {% else %}-{% endif %}
         </td>
         <td>{{ paste.view_count }}</td>
         <td>

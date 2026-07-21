@@ -75,7 +75,7 @@ flask db upgrade
 python run.py
 ```
 
-**Production** (gunicorn, port 8118 — mirrors the Docker setup):
+**Production** (gunicorn, port 8118 - mirrors the Docker setup):
 
 ```sh
 gunicorn --bind 0.0.0.0:8118 --workers 2 run:app
@@ -148,7 +148,7 @@ All options are set via `.env`:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SECRET_KEY` | — | **Required.** Flask session signing key |
+| `SECRET_KEY` | - | **Required.** Flask session signing key |
 | `FLASK_ENV` | `development` | Set to `production` for production |
 | `DATABASE_URL` | `sqlite:///whitespace.db` | SQLAlchemy connection string |
 | `ADMIN_USERNAME` | `admin` | Admin panel username |

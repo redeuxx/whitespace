@@ -9,7 +9,7 @@ A self-hosted pastebin built with Flask. Supports syntax highlighting, file atta
 - Expiry options: burn after read, 1h, 1d, 1w, or never
 - File attachments (number of attachments is configurable)
 - Full-text search
-- Admin panel — manage pastes, ban IPs, toggle maintenance mode
+- Admin panel - manage pastes, ban IPs, toggle maintenance mode
 - Rate-limiting options
 
 ## Deployment
