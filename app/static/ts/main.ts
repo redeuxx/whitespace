@@ -126,29 +126,56 @@ function initWhitespace(): void {
   const fileList = document.getElementById('file-list') as HTMLElement | null;
   const maxFiles = parseInt(fileList?.dataset.max ?? '10');
 
+  function renderFileList(): void {
+    if (!fileInput || !fileList) return;
+    fileList.innerHTML = '';
+    const files = Array.from(fileInput.files ?? []).slice(0, maxFiles);
+    if (files.length === 0) return;
+
+    files.forEach(file => {
+      const item = document.createElement('div');
+      item.className = 'attachment-item';
+      item.innerHTML = `
+        <span class="icon has-text-info"><i class="fas fa-paperclip"></i></span>
+        <span class="attachment-name">${escapeHtml(file.name)}</span>
+        <span class="attachment-size">${formatBytes(file.size)}</span>
+      `;
+      fileList.appendChild(item);
+    });
+
+    if ((fileInput.files?.length ?? 0) > maxFiles) {
+      const warn = document.createElement('p');
+      warn.className = 'help is-warning';
+      warn.textContent = `Only the first ${maxFiles} files will be uploaded.`;
+      fileList.appendChild(warn);
+    }
+  }
+
   if (fileInput && fileList) {
-    fileInput.addEventListener('change', () => {
-      fileList.innerHTML = '';
-      const files = Array.from(fileInput.files ?? []).slice(0, maxFiles);
-      if (files.length === 0) return;
+    fileInput.addEventListener('change', renderFileList);
+  }
 
-      files.forEach(file => {
-        const item = document.createElement('div');
-        item.className = 'attachment-item';
-        item.innerHTML = `
-          <span class="icon has-text-info"><i class="fas fa-paperclip"></i></span>
-          <span class="attachment-name">${escapeHtml(file.name)}</span>
-          <span class="attachment-size">${formatBytes(file.size)}</span>
-        `;
-        fileList.appendChild(item);
+  // PASTE FILES/IMAGES FROM CLIPBOARD
+  if (fileInput && fileList) {
+    document.addEventListener('paste', e => {
+      const clipboardFiles = Array.from(e.clipboardData?.items ?? [])
+        .filter(item => item.kind === 'file')
+        .map(item => item.getAsFile())
+        .filter((f): f is File => f !== null);
+      if (clipboardFiles.length === 0) return;
+
+      e.preventDefault();
+      const merged = new DataTransfer();
+      Array.from(fileInput.files ?? []).forEach(f => merged.items.add(f));
+      clipboardFiles.forEach((f, i) => {
+        // Clipboard images arrive as generic "image.png" - disambiguate multiple pastes.
+        const named = f.name === 'image.png'
+          ? new File([f], `pasted-image-${Date.now()}-${i}.png`, { type: f.type })
+          : f;
+        merged.items.add(named);
       });
-
-      if ((fileInput.files?.length ?? 0) > maxFiles) {
-        const warn = document.createElement('p');
-        warn.className = 'help is-warning';
-        warn.textContent = `Only the first ${maxFiles} files will be uploaded.`;
-        fileList.appendChild(warn);
-      }
+      fileInput.files = merged.files;
+      renderFileList();
     });
   }
 

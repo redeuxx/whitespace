@@ -118,29 +118,55 @@ function initWhitespace() {
     const fileInput = document.getElementById('attachments');
     const fileList = document.getElementById('file-list');
     const maxFiles = parseInt((_a = fileList === null || fileList === void 0 ? void 0 : fileList.dataset.max) !== null && _a !== void 0 ? _a : '10');
+    function renderFileList() {
+        var _a, _b, _c;
+        if (!fileInput || !fileList)
+            return;
+        fileList.innerHTML = '';
+        const files = Array.from((_a = fileInput.files) !== null && _a !== void 0 ? _a : []).slice(0, maxFiles);
+        if (files.length === 0)
+            return;
+        files.forEach(file => {
+            const item = document.createElement('div');
+            item.className = 'attachment-item';
+            item.innerHTML = `
+        <span class="icon has-text-info"><i class="fas fa-paperclip"></i></span>
+        <span class="attachment-name">${escapeHtml(file.name)}</span>
+        <span class="attachment-size">${formatBytes(file.size)}</span>
+      `;
+            fileList.appendChild(item);
+        });
+        if (((_c = (_b = fileInput.files) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) > maxFiles) {
+            const warn = document.createElement('p');
+            warn.className = 'help is-warning';
+            warn.textContent = `Only the first ${maxFiles} files will be uploaded.`;
+            fileList.appendChild(warn);
+        }
+    }
     if (fileInput && fileList) {
-        fileInput.addEventListener('change', () => {
+        fileInput.addEventListener('change', renderFileList);
+    }
+    // PASTE FILES/IMAGES FROM CLIPBOARD
+    if (fileInput && fileList) {
+        document.addEventListener('paste', e => {
             var _a, _b, _c;
-            fileList.innerHTML = '';
-            const files = Array.from((_a = fileInput.files) !== null && _a !== void 0 ? _a : []).slice(0, maxFiles);
-            if (files.length === 0)
+            const clipboardFiles = Array.from((_b = (_a = e.clipboardData) === null || _a === void 0 ? void 0 : _a.items) !== null && _b !== void 0 ? _b : [])
+                .filter(item => item.kind === 'file')
+                .map(item => item.getAsFile())
+                .filter((f) => f !== null);
+            if (clipboardFiles.length === 0)
                 return;
-            files.forEach(file => {
-                const item = document.createElement('div');
-                item.className = 'attachment-item';
-                item.innerHTML = `
-          <span class="icon has-text-info"><i class="fas fa-paperclip"></i></span>
-          <span class="attachment-name">${escapeHtml(file.name)}</span>
-          <span class="attachment-size">${formatBytes(file.size)}</span>
-        `;
-                fileList.appendChild(item);
+            e.preventDefault();
+            const merged = new DataTransfer();
+            Array.from((_c = fileInput.files) !== null && _c !== void 0 ? _c : []).forEach(f => merged.items.add(f));
+            clipboardFiles.forEach((f, i) => {
+                const named = f.name === 'image.png'
+                    ? new File([f], `pasted-image-${Date.now()}-${i}.png`, { type: f.type })
+                    : f;
+                merged.items.add(named);
             });
-            if (((_c = (_b = fileInput.files) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) > maxFiles) {
-                const warn = document.createElement('p');
-                warn.className = 'help is-warning';
-                warn.textContent = `Only the first ${maxFiles} files will be uploaded.`;
-                fileList.appendChild(warn);
-            }
+            fileInput.files = merged.files;
+            renderFileList();
         });
     }
     // IMAGE LIGHTBOX
