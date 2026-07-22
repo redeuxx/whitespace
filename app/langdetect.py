@@ -99,7 +99,7 @@ def _manual_detect(text):
     """
     M = re.MULTILINE
 
-    # JSON — parse-based, unambiguous
+    # JSON - parse-based, unambiguous
     stripped = text.strip()
     if stripped and stripped[0] in ('{', '['):
         try:
@@ -108,7 +108,7 @@ def _manual_detect(text):
         except (ValueError, json.JSONDecodeError):
             pass
 
-    # SQL — require compound statement starters anchored to line beginnings;
+    # SQL - require compound statement starters anchored to line beginnings;
     # bare keywords like SELECT/FROM/TABLE are common React/MUI component names in TSX
     if re.search(
         r'^\s*(SELECT\s+[\w*]|INSERT\s+INTO\s+\w|DELETE\s+FROM\s+\w|'
@@ -123,14 +123,14 @@ def _manual_detect(text):
        re.search(r'^(RUN|CMD|COPY|ADD|EXPOSE|ENV|ENTRYPOINT)\b', text, M):
         return 'dockerfile'
 
-    # Python (no shebang) — requires Python-specific patterns not shared with other languages
+    # Python (no shebang) - requires Python-specific patterns not shared with other languages
     if (re.search(r'\bdef\s+\w+\s*\(self[,)]', text) or
         re.search(r'if\s+__name__\s*==\s*["\']__main__["\']', text) or
         re.search(r'@(classmethod|staticmethod|property)\b', text)) and \
        re.search(r'\bdef\s+\w+\s*\(', text):
         return 'python'
 
-    # Assembly — must run before C/C++ because GAS-syntax assembly files often
+    # Assembly - must run before C/C++ because GAS-syntax assembly files often
     # use #include for macro headers (e.g. RISC-V/ARM test suites).
     # .section/.globl at line-start are essentially exclusive to assemblers;
     # two or more GAS pseudo-op directives is a reliable signal.
@@ -140,35 +140,35 @@ def _manual_detect(text):
            len(re.findall(_ASM_DIRECTIVES, text, M)) >= 2:
             return 'x86asm'
 
-    # C / C++ — #include is unique to the C family; check before CSS/SCSS
+    # C / C++ - #include is unique to the C family; check before CSS/SCSS
     if re.search(r'^#include\s*[<"]', text, M):
         if re.search(r'\b(cout\b|cin\b|std::|namespace\s+\w|template\s*<|#include\s*<(iostream|vector|string|map|algorithm)>)', text):
             return 'cpp'
         return 'c'
 
-    # Go — `package` declaration is unique to Go
+    # Go - `package` declaration is unique to Go
     if re.search(r'^package\s+\w+', text, M) and \
        re.search(r'\bfunc\s+\w+', text):
         return 'go'
 
-    # Rust — fn + at least one Rust-specific token
+    # Rust - fn + at least one Rust-specific token
     if re.search(r'\bfn\s+\w+\s*[(<]', text) and \
        re.search(r'\b(let\s+mut|println!|impl\s+\w|use\s+std::|#\[derive)', text):
         return 'rust'
 
-    # C# — before Java since both use `public class`
+    # C# - before Java since both use `public class`
     if re.search(r'\busing\s+System[\s;]', text) or \
        (re.search(r'\bnamespace\s+\w+', text) and
         re.search(r'\bpublic\s+(class|interface|enum)\s+\w+', text)):
         return 'csharp'
 
-    # Java — public class/interface + Java stdlib imports or System.out
+    # Java - public class/interface + Java stdlib imports or System.out
     if re.search(r'\bpublic\s+(class|interface|enum)\s+\w+', text) and \
        (re.search(r'\bimport\s+java\.', text) or
         re.search(r'System\.out\.|System\.err\.', text)):
         return 'java'
 
-    # Kotlin — `fun` keyword + val/var with type or data class
+    # Kotlin - `fun` keyword + val/var with type or data class
     if re.search(r'\bfun\s+\w+\s*[(<(]', text) and \
        re.search(r'\b(val|var)\s+\w+\s*[:=]|data\s+class\s+\w+', text):
         return 'kotlin'
@@ -178,14 +178,14 @@ def _manual_detect(text):
        re.search(r'\b(object|trait|case\s+class)\s+\w+', text):
         return 'scala'
 
-    # Swift — func + Swift-specific patterns
+    # Swift - func + Swift-specific patterns
     # (?:<[^>]*>)? allows for generic type parameters between name and (
     if re.search(r'\bfunc\s+\w+(?:<[^>]*>)?\s*\(', text) and \
        re.search(r'\b(guard\s+let|if\s+let|@\w+\b|var\s+\w+\s*[:=])', text) and \
        not re.search(r'^package\s+\w+', text, M):
         return 'swift'
 
-    # TypeScript — before JS; requires type annotations or TS-specific keywords
+    # TypeScript - before JS; requires type annotations or TS-specific keywords
     if re.search(r'\b(interface|type)\s+\w+[\s{<]', text) and \
        re.search(r':\s*(string|number|boolean|any|void|never|unknown)\b', text):
         return 'typescript'
@@ -199,7 +199,7 @@ def _manual_detect(text):
         re.search(r'\b(const|let|function)\s+\w+', text)):
         return 'typescript'
 
-    # JavaScript / JSX — const/let/var + JS-specific patterns or React JSX
+    # JavaScript / JSX - const/let/var + JS-specific patterns or React JSX
     if re.search(r'\b(const|let|var)\s+\w+\s*=', text) and \
        re.search(r'\b(function\s*\(|=>\s*\{|require\s*\(|module\.exports|console\.)', text):
         return 'javascript'
@@ -208,12 +208,12 @@ def _manual_detect(text):
        re.search(r'return[\s(]*<[A-Z]\w*[\s/>]', text):
         return 'javascript'
 
-    # Elixir — defmodule is unique; must come before Ruby (both use def/end)
+    # Elixir - defmodule is unique; must come before Ruby (both use def/end)
     if re.search(r'\bdefmodule\s+\w+', text) and \
        re.search(r'\bdef\s+\w+', text):
         return 'elixir'
 
-    # Ruby — def + end (Lua uses function, not def)
+    # Ruby - def + end (Lua uses function, not def)
     if re.search(r'\bdef\s+\w+', text) and \
        re.search(r'\bend\b', text) and \
        re.search(r'\b(puts|require|attr_|do\s*\|)', text):
@@ -225,17 +225,17 @@ def _manual_detect(text):
        re.search(r'\b(local\s+\w+|require\s*[("\'"]|print\s*\()', text):
         return 'lua'
 
-    # Haskell — type signatures and do-notation
+    # Haskell - type signatures and do-notation
     if re.search(r'::\s*\w+(\s+->\s*\w+)+', text) and \
        re.search(r'\b(module\s+\w+|import\s+Data\.|where\b)', text):
         return 'haskell'
 
-    # Erlang — -module declaration
+    # Erlang - -module declaration
     if re.search(r'^-module\s*\(', text, M) and \
        re.search(r'^-export\s*\(', text, M):
         return 'erlang'
 
-    # Clojure — S-expression with defn/def
+    # Clojure - S-expression with defn/def
     if re.search(r'^\s*\(def(n|module|record|protocol)?\s+', text, M):
         return 'clojure'
 
@@ -244,27 +244,27 @@ def _manual_detect(text):
        re.search(r'\b(print\s*\(|import\s+["\']dart:)', text):
         return 'dart'
 
-    # PowerShell — cmdlet syntax or $variable declarations
+    # PowerShell - cmdlet syntax or $variable declarations
     if re.search(r'\$\w+\s*=', text) and \
        re.search(r'\b(Write-Host|Get-|Set-|New-|Remove-|Invoke-|-Param\b|\[Parameter)', text):
         return 'powershell'
 
-    # nginx config — before SCSS (nested braces trigger SCSS's nested-rule check)
+    # nginx config - before SCSS (nested braces trigger SCSS's nested-rule check)
     if re.search(r'\b(server|location|upstream)\s*\{', text) and \
        re.search(r'\b(listen|proxy_pass|root|index)\s+', text):
         return 'nginx'
 
-    # Apache config — before Pygments fallback (Pygments scores apache config as XML)
+    # Apache config - before Pygments fallback (Pygments scores apache config as XML)
     if re.search(r'<(VirtualHost|Directory|Location|Files)\b', text) and \
        re.search(r'\b(ServerName|DocumentRoot|AllowOverride|RewriteRule)\b', text):
         return 'apache'
 
-    # SCSS — $variable: value syntax is the only unambiguous SCSS signal;
+    # SCSS - $variable: value syntax is the only unambiguous SCSS signal;
     # nested braces alone match C/C++/nginx/etc. so that heuristic is dropped
     if re.search(r'^\s*\$\w+\s*:', text, M):
         return 'scss'
 
-    # CSS — selector block + at least one recognisable CSS property
+    # CSS - selector block + at least one recognisable CSS property
     _CSS_PROPS = r'\b(color|font|margin|padding|border|background|display|width|height|position|top|left|right|bottom|flex|grid|overflow|opacity|cursor|z-index|text-|list-|box-|align-|justify-)\b'
     if re.search(r'[^\s{]{1,200}[ \t]*\{', text) and \
        re.search(_CSS_PROPS, text) and \
@@ -272,7 +272,7 @@ def _manual_detect(text):
        re.search(r';\s*\}', text):
         return 'css'
 
-    # Shell/Bash — check before Markdown because backticks in shell scripts
+    # Shell/Bash - check before Markdown because backticks in shell scripts
     # (command substitution) would otherwise trigger the Markdown backtick heuristic.
     _SHELL_SHEBANG = r'^#!\s*/\S*(sh|bash|zsh|ksh|dash)\b'
     _SHELL_KEYWORDS = r'\b(fi|esac|elif|done)\b'
@@ -281,17 +281,17 @@ def _manual_detect(text):
        (re.search(_SHELL_KEYWORDS, text) and re.search(_SHELL_CONSTRUCTS, text)):
         return 'shell'
 
-    # Markdown — headings or list + emphasis
+    # Markdown - headings or list + emphasis
     if re.search(r'^#{1,6}\s+\S', text, M) and \
        re.search(r'(\*\*|__|`|\[[^\[\]]+\]\([^()]+\))', text):
         return 'markdown'
 
-    # Makefile — tab-indented recipes
+    # Makefile - tab-indented recipes
     if re.search(r'^\w[\w.\-/ ]*:', text, M) and \
        re.search(r'^\t\S', text, M):
         return 'makefile'
 
-    # VimScript — use function! (with !) to avoid matching PHP/JS/Lua `function`;
+    # VimScript - use function! (with !) to avoid matching PHP/JS/Lua `function`;
     # plain `set`/`let g:`/mapping commands are unambiguous on their own
     if re.search(r'^(set\s+\w|let\s+[gslbwt]:\w|function!\s+\w|syntax\s+(enable|on|off)|colorscheme\s+\w)', text, M) or \
        re.search(r'^(nnoremap|vnoremap|inoremap|xnoremap|noremap|map)\b', text, M):
@@ -303,7 +303,7 @@ def _manual_detect(text):
         re.search(r'\b(my|local|our)\s+[\$@%]', text)):
         return 'perl'
 
-    # YAML — key: value structure (last resort; many config formats look like YAML)
+    # YAML - key: value structure (last resort; many config formats look like YAML)
     if re.search(r'^---', text, M) or \
        (re.search(r'^\w[\w\s]*:\s+\S', text, M) and
         re.search(r'^\s+-\s+\S', text, M)):
@@ -328,7 +328,7 @@ def detect_language(content):
            len(re.findall(_ASM_DIR, extended, M)) >= 2:
             return 'x86asm'
 
-    # Manual patterns run first — they are more targeted and avoid Pygments
+    # Manual patterns run first - they are more targeted and avoid Pygments
     # false positives (e.g. Pygments scores Apache config as XML).
     # Pygments covers languages with strong textual markers (shebangs, <?php, etc.)
     # that manual detection doesn't handle.

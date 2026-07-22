@@ -20,7 +20,7 @@ from .langdetect import HLJS_LANGUAGES, PYGMENTS_TO_HLJS, detect_language  # noq
 _V1_PREFIX = 'enc:v1:'  # legacy: PBKDF2-SHA256 + AES-128-CBC (Fernet)
 _V2_PREFIX = 'enc:v2:'  # current: Argon2id + AES-256-GCM
 
-# Argon2id parameters — OWASP interactive profile
+# Argon2id parameters - OWASP interactive profile
 _ARGON2_MEMORY = 19456   # 19 MiB
 _ARGON2_TIME   = 2
 _ARGON2_LANES  = 1
@@ -54,7 +54,7 @@ def encrypt_content(content: str, password: str, slug: str, secret_key: str) -> 
     salt = os.urandom(_SALT_SIZE)
     key = _derive_key_v2(password, slug, secret_key, salt)
     nonce = os.urandom(_NONCE_SIZE)
-    # slug passed as AAD — GCM auth fails if ciphertext is moved to a different paste
+    # slug passed as AAD - GCM auth fails if ciphertext is moved to a different paste
     ct = AESGCM(key).encrypt(nonce, content.encode(), slug.encode())
     blob = base64.urlsafe_b64encode(salt + nonce + ct).decode()
     return _V2_PREFIX + blob
@@ -144,7 +144,7 @@ def fetch_url_title(url, timeout=5):
             'Host': parsed.netloc,
         })
         with urlopen(req, timeout=timeout) as resp:
-            # Only read the first 32 KB — the title is always in the <head>
+            # Only read the first 32 KB - the title is always in the <head>
             chunk = resp.read(32768).decode('utf-8', errors='replace')
         m = _TITLE_RE.search(chunk)
         if m:
@@ -229,7 +229,7 @@ def time_ago(dt):
 def time_until(dt):
     """Return a human-readable time until string for future dates."""
     if dt is None:
-        return '—'
+        return '-'
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     now = datetime.now(timezone.utc)

@@ -8,8 +8,9 @@ A self-hosted pastebin built with Flask. Supports syntax highlighting, file atta
 - [Optional password protection with AES-256-GCM encryption at rest](https://github.com/redeuxx/whitespace/blob/main/app/utils.py#L47)
 - Expiry options: burn after read, 1h, 1d, 1w, or never
 - File attachments (number of attachments is configurable)
+- Fork pastes to create an editable copy
 - Full-text search
-- Admin panel — manage pastes, ban IPs, toggle maintenance mode
+- Admin panel - manage pastes, ban IPs, toggle maintenance mode
 - Rate-limiting options
 
 ## Deployment
@@ -28,6 +29,8 @@ docker compose up --build -d
 ```
 
 App runs at [http://localhost:8118](http://localhost:8118), admin at `/admin`. This app is meant to be run behind a reverse proxy that provides SSL.
+
+See [.env.example](.env.example) for all configuration options (file upload limits, rate limits, pagination, database URL).
 
 ## Updating (Docker)
 
