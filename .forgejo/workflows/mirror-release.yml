@@ -1,0 +1,33 @@
+name: Mirror release to GitHub
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create matching GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+          REPO: redeuxx/whitespace
+          TAG: ${{ github.event.release.tag_name }}
+          TARGET: ${{ github.event.release.target_commitish }}
+          NAME: ${{ github.event.release.name }}
+          BODY: ${{ github.event.release.body }}
+          PRERELEASE: ${{ github.event.release.prerelease }}
+          DRAFT: ${{ github.event.release.draft }}
+        run: |
+          curl -sS -f -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/releases" \
+            -d "$(jq -n \
+                  --arg tag "$TAG" \
+                  --arg target "$TARGET" \
+                  --arg name "$NAME" \
+                  --arg body "$BODY" \
+                  --argjson prerelease "$PRERELEASE" \
+                  --argjson draft "$DRAFT" \
+                  '{tag_name:$tag, target_commitish:$target, name:$name, body:$body, prerelease:$prerelease, draft:$draft}')"
