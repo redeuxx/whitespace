@@ -72,9 +72,7 @@ jobs:
                 "$FORGEJO_API/repos/$FORGEJO_REPO/pulls" \
                 -d "$(jq -n \
                       --arg title "[GH PR #$NUM] $TITLE" \
-                      --arg body "$BODY
-
-Mirrored from https://github.com/$HEAD_REPO/pull/$NUM" \
+                      --arg body "$(printf '%s\n\nMirrored from https://github.com/%s/pull/%s' "$BODY" "$HEAD_REPO" "$NUM")" \
                       --arg head "$BRANCH" \
                       --arg base "$BASE_REF" \
                       '{title:$title, body:$body, head:$head, base:$base}')"
