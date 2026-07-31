@@ -1,0 +1,82 @@
+name: Sync GitHub pull requests into Forgejo
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Close GitHub PRs merged/closed in Forgejo
+        env:
+          GH_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: redeuxx/whitespace
+          FORGEJO_API: ${{ github.server_url }}/api/v1
+          FORGEJO_REPO: ${{ github.repository }}
+        run: |
+          curl -sS -H "Authorization: token $FORGEJO_TOKEN" \
+            "$FORGEJO_API/repos/$FORGEJO_REPO/pulls?state=closed" \
+            | jq -c '.[] | select(.head.ref | startswith("github-pr-"))' > /tmp/closed.jsonl
+
+          while read -r pr; do
+            BRANCH=$(jq -r '.head.ref' <<<"$pr")
+            NUM="${BRANCH#github-pr-}"
+
+            curl -sS -X PATCH -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$GH_REPO/pulls/$NUM" \
+              -d '{"state":"closed"}' > /dev/null
+
+            curl -sS -X DELETE -H "Authorization: token $FORGEJO_TOKEN" \
+              "$FORGEJO_API/repos/$FORGEJO_REPO/branches/$BRANCH" > /dev/null
+          done < /tmp/closed.jsonl
+
+      - name: Mirror open GitHub PR branches and open matching Forgejo PRs
+        env:
+          GH_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: redeuxx/whitespace
+          FORGEJO_API: ${{ github.server_url }}/api/v1
+          FORGEJO_REPO: ${{ github.repository }}
+        run: |
+          curl -sS -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/$GH_REPO/pulls?state=open&per_page=100" \
+            | jq -c '.[]' > /tmp/prs.jsonl
+
+          while read -r pr; do
+            NUM=$(jq -r '.number' <<<"$pr")
+            HEAD_REPO=$(jq -r '.head.repo.full_name' <<<"$pr")
+            HEAD_REF=$(jq -r '.head.ref' <<<"$pr")
+            BASE_REF=$(jq -r '.base.ref' <<<"$pr")
+            TITLE=$(jq -r '.title' <<<"$pr")
+            BODY=$(jq -r '.body // ""' <<<"$pr")
+            BRANCH="github-pr-$NUM"
+
+            git fetch "https://x-access-token:${GH_TOKEN}@github.com/$HEAD_REPO.git" "$HEAD_REF"
+            git push origin "FETCH_HEAD:refs/heads/$BRANCH" --force
+
+            EXISTING=$(curl -sS -H "Authorization: token $FORGEJO_TOKEN" \
+              "$FORGEJO_API/repos/$FORGEJO_REPO/pulls?state=open" \
+              | jq -r --arg b "$BRANCH" '.[] | select(.head.ref==$b) | .number')
+
+            if [ -z "$EXISTING" ]; then
+              curl -sS -X POST -H "Authorization: token $FORGEJO_TOKEN" -H "Content-Type: application/json" \
+                "$FORGEJO_API/repos/$FORGEJO_REPO/pulls" \
+                -d "$(jq -n \
+                      --arg title "[GH PR #$NUM] $TITLE" \
+                      --arg body "$BODY
+
+Mirrored from https://github.com/$HEAD_REPO/pull/$NUM" \
+                      --arg head "$BRANCH" \
+                      --arg base "$BASE_REF" \
+                      '{title:$title, body:$body, head:$head, base:$base}')"
+            fi
+          done < /tmp/prs.jsonl
