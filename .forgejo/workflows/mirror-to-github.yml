@@ -9,21 +9,29 @@ jobs:
   mirror:
     runs-on: docker
     steps:
-      # fetch-depth: 0 because a shallow clone cannot be pushed
+      # fetch-depth: 0 because a shallow clone cannot be pushed; fetch-tags so
+      # the tag refspec below has something to send
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Push main to GitHub
         env:
           GH_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
           GH_REPO: redeuxx/whitespace
         run: |
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git"
+
           # --force because Forgejo is the source of truth and GitHub is a
           # mirror; anything committed directly on GitHub is meant to lose.
           # A plain refspec push, unlike the native push mirror's
           # git push --mirror, never prunes branches that only exist on
           # GitHub, so dependabot branches and their PRs survive.
-          git push --force \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" \
-            HEAD:refs/heads/main
+          git push --force "$REMOTE" HEAD:refs/heads/main
+
+          # Tags deliberately without --force: a release tag that needs to
+          # move is a mistake worth failing on, not overwriting. They have to
+          # be pushed at all because mirror-release.yml creates GitHub
+          # releases against tags it assumes already exist there.
+          git push "$REMOTE" 'refs/tags/*:refs/tags/*'
