@@ -14,7 +14,7 @@ jobs:
       - name: Close GitHub PRs merged/closed in Forgejo
         env:
           GH_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
-          FORGEJO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FJ_API_TOKEN }}
           GH_REPO: redeuxx/whitespace
           FORGEJO_API: ${{ github.server_url }}/api/v1
           FORGEJO_REPO: ${{ github.repository }}
@@ -27,7 +27,7 @@ jobs:
             BRANCH=$(jq -r '.head.ref' <<<"$pr")
             NUM="${BRANCH#github-pr-}"
 
-            curl -sS -X PATCH -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            curl -sS -f -X PATCH -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/$GH_REPO/pulls/$NUM" \
               -d '{"state":"closed"}' > /dev/null
 
@@ -38,14 +38,15 @@ jobs:
       - name: Mirror open GitHub PR branches and open matching Forgejo PRs
         env:
           GH_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
-          FORGEJO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORGEJO_TOKEN: ${{ secrets.FJ_API_TOKEN }}
           GH_REPO: redeuxx/whitespace
           FORGEJO_API: ${{ github.server_url }}/api/v1
           FORGEJO_REPO: ${{ github.repository }}
         run: |
-          curl -sS -H "Authorization: token $GH_TOKEN" \
+          curl -sS -f -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/$GH_REPO/pulls?state=open&per_page=100" \
-            | jq -c '.[]' > /tmp/prs.jsonl
+            > /tmp/prs.json
+          jq -c '.[]' /tmp/prs.json > /tmp/prs.jsonl
 
           while read -r pr; do
             NUM=$(jq -r '.number' <<<"$pr")
