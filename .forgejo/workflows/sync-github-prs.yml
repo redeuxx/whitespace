@@ -9,7 +9,7 @@ jobs:
   sync:
     runs-on: docker
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Close GitHub PRs merged/closed in Forgejo
         env:
