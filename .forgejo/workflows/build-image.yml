@@ -1,0 +1,46 @@
+name: Build and publish image
+
+# Builds the image on the runner and pushes it to Forgejo's own container
+# registry, so deploying is a pull instead of a build.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to the Forgejo container registry
+        env:
+          # Injected automatically by Forgejo Actions; scoped to this repo.
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: echo "$TOKEN" | docker login git.wenberg.net -u "$ACTOR" --password-stdin
+
+      - name: Build and push
+        env:
+          IMAGE: git.wenberg.net/${{ github.repository }}
+        run: |
+          set -eu
+
+          # Every build gets an immutable sha tag; that is what a rollback
+          # pins to. The moving tags below are conveniences on top of it.
+          SHA_TAG="${GITHUB_SHA:0:12}"
+          docker build -t "$IMAGE:$SHA_TAG" .
+          docker push "$IMAGE:$SHA_TAG"
+
+          case "$GITHUB_REF" in
+            refs/heads/main) MOVING="latest" ;;
+            refs/tags/*)     MOVING="${GITHUB_REF#refs/tags/}" ;;
+            *)               MOVING="" ;;
+          esac
+
+          if [ -n "$MOVING" ]; then
+            docker tag "$IMAGE:$SHA_TAG" "$IMAGE:$MOVING"
+            docker push "$IMAGE:$MOVING"
+          fi

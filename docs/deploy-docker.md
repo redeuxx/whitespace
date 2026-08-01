@@ -29,17 +29,26 @@ Generate a secure secret key if needed:
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-### 2. Build and start
+### 2. Pull and start
+
+```sh
+docker compose pull
+docker compose up -d
+```
+
+This will:
+- Pull the prebuilt image from `git.wenberg.net/redeuxx/whitespace:latest`
+- Run database migrations automatically
+- Start gunicorn on port **8118** with 2 workers
+- Persist uploads and the SQLite database in named Docker volumes
+
+The image is built by the `Build and publish image` workflow on every push to
+`main`, so the deployment host never compiles anything. To build locally
+instead (development, or an unpushed change):
 
 ```sh
 docker compose up --build -d
 ```
-
-This will:
-- Build the image from the `Dockerfile`
-- Run database migrations automatically
-- Start gunicorn on port **8118** with 2 workers
-- Persist uploads and the SQLite database in named Docker volumes
 
 ### 3. Access the app
 
@@ -54,7 +63,9 @@ The admin panel is at [http://localhost:8118/admin](http://localhost:8118/admin)
 | View logs | `docker compose logs -f` |
 | Stop | `docker compose down` |
 | Restart | `docker compose restart` |
-| Rebuild after code changes | `docker compose up -d --build` |
+| Deploy a new build | `git pull && docker compose pull && docker compose up -d` |
+| Rebuild locally after code changes | `docker compose up -d --build` |
+| Roll back to a known commit | `docker compose up -d` with `image:` pinned to `git.wenberg.net/redeuxx/whitespace:<12-char-sha>` |
 
 ## Data persistence
 
