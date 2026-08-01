@@ -63,7 +63,8 @@ The admin panel is at [http://localhost:8118/admin](http://localhost:8118/admin)
 | View logs | `docker compose logs -f` |
 | Stop | `docker compose down` |
 | Restart | `docker compose restart` |
-| Deploy a new build | `git pull && docker compose pull && docker compose up -d` |
+| Deploy a new build | `docker compose pull && docker compose up -d` |
+| Deploy when `docker-compose.yml` changed | `git pull` first, then the above |
 | Rebuild locally after code changes | `docker compose up -d --build` |
 | Roll back to a known commit | `docker compose up -d` with `image:` pinned to `git.wenberg.net/redeuxx/whitespace:<12-char-sha>` |
 
