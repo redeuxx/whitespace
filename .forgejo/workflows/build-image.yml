@@ -17,10 +17,15 @@ jobs:
 
       - name: Log in to the Forgejo container registry
         env:
-          # Injected automatically by Forgejo Actions; scoped to this repo.
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTOR: ${{ github.actor }}
-        run: echo "$TOKEN" | docker login git.wenberg.net -u "$ACTOR" --password-stdin
+          # Not secrets.GITHUB_TOKEN: packages are owned by the user, not the
+          # repo, so the repo-scoped Actions token authenticates fine but is
+          # rejected on push with "unauthorized: reqPackageAccess". This has
+          # to be a PAT carrying write:package.
+          TOKEN: ${{ secrets.REGISTRY_TOKEN }}
+          # The PAT owner, which is also the package namespace. Not
+          # github.actor, which is whoever pushed.
+          OWNER: ${{ github.repository_owner }}
+        run: echo "$TOKEN" | docker login git.wenberg.net -u "$OWNER" --password-stdin
 
       - name: Build and push
         env:
