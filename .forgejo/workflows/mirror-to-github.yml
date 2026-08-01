@@ -1,0 +1,29 @@
+name: Mirror main to GitHub
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: docker
+    steps:
+      # fetch-depth: 0 because a shallow clone cannot be pushed
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push main to GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+          GH_REPO: redeuxx/whitespace
+        run: |
+          # --force because Forgejo is the source of truth and GitHub is a
+          # mirror; anything committed directly on GitHub is meant to lose.
+          # A plain refspec push, unlike the native push mirror's
+          # git push --mirror, never prunes branches that only exist on
+          # GitHub, so dependabot branches and their PRs survive.
+          git push --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" \
+            HEAD:refs/heads/main
