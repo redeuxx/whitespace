@@ -1,0 +1,54 @@
+name: Check for action updates
+
+# Dependabot only scans .github/workflows, so nothing watches the actions
+# pinned here. Moving major tags like @v7 already pick up minor and patch
+# releases on their own; this job exists to catch the major bumps they do not.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare pinned majors against latest releases
+        run: |
+          set -eu
+
+          grep -rhoE 'uses: [A-Za-z0-9._-]+/[A-Za-z0-9._-]+@v[0-9]+' .forgejo/workflows \
+            | sed 's/^uses: //' | sort -u > /tmp/actions.txt
+
+          if [ ! -s /tmp/actions.txt ]; then
+            echo "no pinned actions found"
+            exit 0
+          fi
+
+          outdated=0
+          while read -r spec; do
+            repo="${spec%@*}"
+            current="${spec##*@v}"
+
+            # Unauthenticated on purpose: these are public repos and this runs
+            # weekly, so the 60/hour anonymous limit is ample.
+            latest=$(curl -sS -f "https://api.github.com/repos/${repo}/releases/latest" \
+                       | jq -r '.tag_name // empty' || true)
+
+            if [ -z "$latest" ]; then
+              echo "::warning::${repo} has no latest release to compare against"
+              continue
+            fi
+
+            latest_major=$(printf '%s' "$latest" | sed -E 's/^v?([0-9]+).*/\1/')
+
+            if [ "$latest_major" -gt "$current" ]; then
+              echo "::error::${repo} is pinned at v${current} but v${latest_major} is out (${latest})"
+              outdated=1
+            else
+              echo "ok: ${repo} v${current} (latest ${latest})"
+            fi
+          done < /tmp/actions.txt
+
+          exit "$outdated"
