@@ -3,6 +3,12 @@ name: Check for action updates
 # Dependabot only scans .github/workflows, so nothing watches the actions
 # pinned here. Moving major tags like @v7 already pick up minor and patch
 # releases on their own; this job exists to catch the major bumps they do not.
+#
+# It queries data.forgejo.org rather than github.com on purpose. That is where
+# the runner resolves actions from, and its mirror lags: astral-sh/setup-uv is
+# at v9 upstream but only v7 here, and pinning v9 fails the job outright with
+# "could not determine the commit ID of v9^{commit}". Comparing against GitHub
+# would report upgrades that cannot actually be used.
 on:
   schedule:
     - cron: '0 6 * * 1'
@@ -14,7 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Compare pinned majors against latest releases
+      - name: Compare pinned majors against what the runner can fetch
+        env:
+          REGISTRY: https://data.forgejo.org
         run: |
           set -eu
 
@@ -31,23 +39,20 @@ jobs:
             repo="${spec%@*}"
             current="${spec##*@v}"
 
-            # Unauthenticated on purpose: these are public repos and this runs
-            # weekly, so the 60/hour anonymous limit is ample.
-            latest=$(curl -sS -f "https://api.github.com/repos/${repo}/releases/latest" \
-                       | jq -r '.tag_name // empty' || true)
+            latest=$(git ls-remote --tags "${REGISTRY}/${repo}" 2>/dev/null \
+                       | sed -nE 's#.*refs/tags/v([0-9]+)$#\1#p' \
+                       | sort -n | tail -1)
 
             if [ -z "$latest" ]; then
-              echo "::warning::${repo} has no latest release to compare against"
+              echo "::warning::${repo} exposes no vN tags on ${REGISTRY}"
               continue
             fi
 
-            latest_major=$(printf '%s' "$latest" | sed -E 's/^v?([0-9]+).*/\1/')
-
-            if [ "$latest_major" -gt "$current" ]; then
-              echo "::error::${repo} is pinned at v${current} but v${latest_major} is out (${latest})"
+            if [ "$latest" -gt "$current" ]; then
+              echo "::error::${repo} is pinned at v${current} but v${latest} is available"
               outdated=1
             else
-              echo "ok: ${repo} v${current} (latest ${latest})"
+              echo "ok: ${repo} v${current} (newest available v${latest})"
             fi
           done < /tmp/actions.txt
 
