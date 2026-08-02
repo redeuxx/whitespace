@@ -7,12 +7,39 @@
 
 ## Steps
 
-### 1. Configure environment
+The image is published to `git.wenberg.net/redeuxx/whitespace`, so a deployment
+host only needs a `docker-compose.yml` and a `.env` - no clone, no source
+checkout.
 
-Copy the example env file and fill in your values:
+### 1. Create the compose file
 
 ```sh
-cp .env.example .env
+mkdir whitespace && cd whitespace/
+
+cat > docker-compose.yml <<'EOF'
+services:
+  web:
+    image: git.wenberg.net/redeuxx/whitespace:latest
+    ports:
+      - "8118:8118"
+    volumes:
+      - uploads_data:/app/uploads
+      - db_data:/app/instance
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+
+volumes:
+  uploads_data:
+  db_data:
+EOF
+```
+
+### 2. Configure environment
+
+Grab the example env file and fill in your values:
+
+```sh
+curl -o .env https://git.wenberg.net/redeuxx/whitespace/raw/branch/main/.env.example
 ```
 
 Edit `.env` at minimum:
@@ -29,7 +56,7 @@ Generate a secure secret key if needed:
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-### 2. Pull and start
+### 3. Pull and start
 
 ```sh
 docker compose pull
@@ -43,14 +70,17 @@ This will:
 - Persist uploads and the SQLite database in named Docker volumes
 
 The image is built by the `Build and publish image` workflow on every push to
-`main`, so the deployment host never compiles anything. To build locally
-instead (development, or an unpushed change):
+`main`, so the deployment host never compiles anything. To build from source
+instead (development, or an unpushed change), clone the repo and use its
+`docker-compose.yml`, which keeps a `build:` section:
 
 ```sh
+git clone https://git.wenberg.net/redeuxx/whitespace.git
+cd whitespace/
 docker compose up --build -d
 ```
 
-### 3. Access the app
+### 4. Access the app
 
 Open [http://localhost:8118](http://localhost:8118) in your browser.
 
@@ -64,8 +94,7 @@ The admin panel is at [http://localhost:8118/admin](http://localhost:8118/admin)
 | Stop | `docker compose down` |
 | Restart | `docker compose restart` |
 | Deploy a new build | `docker compose pull && docker compose up -d` |
-| Deploy when `docker-compose.yml` changed | `git pull` first, then the above |
-| Rebuild locally after code changes | `docker compose up -d --build` |
+| Rebuild from a source checkout | `docker compose up -d --build` |
 | Roll back to a known commit | `docker compose up -d` with `image:` pinned to `git.wenberg.net/redeuxx/whitespace:<12-char-sha>` |
 
 ## Data persistence
