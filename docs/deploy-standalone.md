@@ -10,7 +10,7 @@
 ### 1. Clone and enter the project
 
 ```sh
-git clone <repo-url>
+git clone https://github.com/redeuxx/whitespace.git
 cd whitespace
 ```
 

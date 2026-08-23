@@ -1,8 +1,7 @@
 services:
   web:
-    # CI publishes this tag; deploy with `docker compose pull && docker compose up -d`.
-    # `build` stays so local dev can still `docker compose up --build`.
-    image: git.wenberg.net/redeuxx/whitespace:latest
+    # Built from this checkout by `docker compose up -d --build`.
+    image: whitespace:latest
     build: .
     ports:
       - "8118:8118"
