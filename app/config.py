@@ -4,7 +4,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 _env_path = Path(__file__).parent.parent / ".env"
-if not _env_path.exists():
+
+# Tests build their own config object and never read the values below, so the
+# missing-.env exit would only break collection. Deployments still get it.
+_under_pytest = "pytest" in sys.modules
+
+if not _env_path.exists() and not _under_pytest:
     print(
         f"\nERROR: Required configuration file not found: {_env_path}\n"
         "\nThe application requires a .env file to run. "
@@ -14,7 +19,8 @@ if not _env_path.exists():
     )
     sys.exit(1)
 
-load_dotenv(_env_path)
+if _env_path.exists():
+    load_dotenv(_env_path)
 
 
 class Config:
