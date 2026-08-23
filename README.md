@@ -20,32 +20,14 @@ A self-hosted pastebin built with Flask. Supports syntax highlighting, file atta
 
 ## Quick start (Docker)
 
-No clone needed - the image is published to `git.wenberg.net/redeuxx/whitespace`.
-
 ```sh
-mkdir whitespace && cd whitespace/
-
-cat > docker-compose.yml <<'EOF'
-services:
-  web:
-    image: git.wenberg.net/redeuxx/whitespace:latest
-    ports:
-      - "8118:8118"
-    volumes:
-      - uploads_data:/app/uploads
-      - db_data:/app/instance
-      - ./.env:/app/.env:ro
-    restart: unless-stopped
-
-volumes:
-  uploads_data:
-  db_data:
-EOF
+git clone https://github.com/redeuxx/whitespace.git
+cd whitespace/
 
 # set SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD
-curl -o .env https://git.wenberg.net/redeuxx/whitespace/raw/branch/main/.env.example
+cp .env.example .env
 
-docker compose up -d
+docker compose up -d --build
 ```
 
 App runs at [http://localhost:8118](http://localhost:8118), admin at `/admin`. This app is meant to be run behind a reverse proxy that provides SSL.
@@ -56,6 +38,6 @@ See [.env.example](.env.example) for all configuration options (file upload limi
 
 ```sh
 cd whitespace/
-docker compose pull
-docker compose up -d
+git pull
+docker compose up -d --build
 ```

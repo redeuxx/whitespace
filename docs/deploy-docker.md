@@ -7,39 +7,20 @@
 
 ## Steps
 
-The image is published to `git.wenberg.net/redeuxx/whitespace`, so a deployment
-host only needs a `docker-compose.yml` and a `.env` - no clone, no source
-checkout.
-
-### 1. Create the compose file
+### 1. Clone the repo
 
 ```sh
-mkdir whitespace && cd whitespace/
-
-cat > docker-compose.yml <<'EOF'
-services:
-  web:
-    image: git.wenberg.net/redeuxx/whitespace:latest
-    ports:
-      - "8118:8118"
-    volumes:
-      - uploads_data:/app/uploads
-      - db_data:/app/instance
-      - ./.env:/app/.env:ro
-    restart: unless-stopped
-
-volumes:
-  uploads_data:
-  db_data:
-EOF
+git clone https://github.com/redeuxx/whitespace.git
+cd whitespace/
 ```
+
+The repo ships a `docker-compose.yml` with the port, volumes and `.env` mount
+already wired up, so there is nothing to write by hand.
 
 ### 2. Configure environment
 
-Grab the example env file and fill in your values:
-
 ```sh
-curl -o .env https://git.wenberg.net/redeuxx/whitespace/raw/branch/main/.env.example
+cp .env.example .env
 ```
 
 Edit `.env` at minimum:
@@ -56,29 +37,17 @@ Generate a secure secret key if needed:
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-### 3. Pull and start
+### 3. Build and start
 
 ```sh
-docker compose pull
-docker compose up -d
+docker compose up -d --build
 ```
 
 This will:
-- Pull the prebuilt image from `git.wenberg.net/redeuxx/whitespace:latest`
+- Build the image from the checkout
 - Run database migrations automatically
 - Start gunicorn on port **8118** with 2 workers
 - Persist uploads and the SQLite database in named Docker volumes
-
-The image is built by the `Build and publish image` workflow on every push to
-`main`, so the deployment host never compiles anything. To build from source
-instead (development, or an unpushed change), clone the repo and use its
-`docker-compose.yml`, which keeps a `build:` section:
-
-```sh
-git clone https://git.wenberg.net/redeuxx/whitespace.git
-cd whitespace/
-docker compose up --build -d
-```
 
 ### 4. Access the app
 
@@ -93,9 +62,8 @@ The admin panel is at [http://localhost:8118/admin](http://localhost:8118/admin)
 | View logs | `docker compose logs -f` |
 | Stop | `docker compose down` |
 | Restart | `docker compose restart` |
-| Deploy a new build | `docker compose pull && docker compose up -d` |
-| Rebuild from a source checkout | `docker compose up -d --build` |
-| Roll back to a known commit | `docker compose up -d` with `image:` pinned to `git.wenberg.net/redeuxx/whitespace:<12-char-sha>` |
+| Deploy a new build | `git pull && docker compose up -d --build` |
+| Roll back to a known commit | `git checkout <sha>` then `docker compose up -d --build` |
 
 ## Data persistence
 
