@@ -1,0 +1,62 @@
+name: Resync requirements.txt on Dependabot PRs
+
+# Dependabot's uv ecosystem updates pyproject.toml and uv.lock but knows
+# nothing about requirements.txt. This repo commits that file on purpose: the
+# Dockerfile installs from it, and docs/deploy-standalone.md tells pip-only
+# users to install from it. Left alone it goes stale and check-lock-sync fails
+# the PR, which is the same drift the pip ecosystem caused, just inverted.
+#
+# This has to live on GitHub. Dependabot runs here, and Forgejo sees these
+# branches only as github-pr-* mirrors that sync-github-prs force-pushes from
+# GitHub every 12h, so a commit added on that side is wiped by the next cron.
+#
+# Note: pushing here makes Dependabot treat the PR as modified and stop
+# rebasing it. That is fine for a dep bump that merges quickly; if it goes
+# stale, close it and let Dependabot open a fresh one.
+
+on:
+  pull_request:
+
+# Dependabot-triggered runs get a read-only GITHUB_TOKEN unless the permissions
+# key grants more. Nothing else here needs write.
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: astral-sh/setup-uv@v10
+
+      # Fail loudly if Dependabot left the lock inconsistent with pyproject,
+      # rather than letting the export below silently re-resolve it. Same check
+      # check-lock-sync.yml runs.
+      - name: Lock must already agree with pyproject.toml
+        run: uv lock --check
+
+      # Flags match check-lock-sync.yml exactly, including the absence of
+      # --frozen. uv stamps the generating command into a header comment, so
+      # --frozen here would rewrite that line on every run and push a
+      # header-only commit to every Dependabot PR forever.
+      - name: Regenerate requirements.txt from uv.lock
+        run: uv export --no-dev --no-hashes -o requirements.txt
+
+      - name: Commit if it changed
+        run: |
+          set -eu
+
+          if git diff --quiet -- requirements.txt; then
+            echo "requirements.txt already matches uv.lock, nothing to do"
+            exit 0
+          fi
+
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -qm 'chore(deps): resync requirements.txt with uv.lock' -- requirements.txt
+          git push
+          echo "pushed regenerated requirements.txt"
