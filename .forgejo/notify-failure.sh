@@ -1,43 +1,37 @@
 #!/bin/sh
-# Opens a Forgejo issue when a workflow fails.
+# Posts to a chat webhook when a workflow fails.
 #
 # The scheduled jobs here fail silently: sync-github-prs ran on a dead
 # GH_MIRROR_TOKEN twice a day for five days, twelve failed runs, and nothing
-# said so. Forgejo does not notify on scheduled-run failures, and nobody reads
-# the Actions tab unprompted. An open issue is somewhere a human already looks.
+# said so. Forgejo does not notify on scheduled-run failures and nobody reads
+# the Actions tab unprompted.
 #
-# Uses FJ_API_TOKEN, which the repo already has and already grants issue write.
+# Filing a Forgejo issue was tried first and does not work: an issue authored
+# by the repo owner's own token notifies nobody, so it is visible but silent,
+# which is the bug rather than the fix.
 set -eu
 
-: "${FORGEJO_API:?}" "${FORGEJO_REPO:?}" "${FORGEJO_TOKEN:?}" "${WORKFLOW:?}" "${RUN_URL:?}"
+: "${NOTIFY_WEBHOOK:?}" "${WORKFLOW:?}" "${RUN_URL:?}" "${REPO:?}"
 
-TITLE="CI failure: $WORKFLOW"
+TEXT="CI failure: $REPO / $WORKFLOW
+$RUN_URL"
 
-# ponytail: one open issue per workflow, not one per failed run. Twice-daily
-# failures would otherwise file twelve issues in five days. The open issue is
-# the signal. Close it when fixed; the next failure opens a fresh one. If you
-# ever want per-run detail, POST a comment here instead of exiting early.
-OPEN=$(curl -sSf -H "Authorization: token $FORGEJO_TOKEN" \
-  "$FORGEJO_API/repos/$FORGEJO_REPO/issues?state=open&type=issues" \
-  | jq --arg t "$TITLE" '[.[] | select(.title == $t)] | length')
+# Discord wants {content}, Slack wants {text}. Mattermost, Rocket.Chat and
+# Google Chat also take {text}, so that is the default.
+case "$NOTIFY_WEBHOOK" in
+  *discord.com*|*discordapp.com*) PAYLOAD=$(jq -n --arg c "$TEXT" '{content:$c}') ;;
+  *)                              PAYLOAD=$(jq -n --arg c "$TEXT" '{text:$c}') ;;
+esac
 
-if [ "$OPEN" -gt 0 ]; then
-  echo "issue already open for $WORKFLOW, not filing another"
-  exit 0
+# ponytail: no dedupe. In chat, one message per failed run is the point; a job
+# failing twice a day should say so twice a day. Add throttling only if it
+# actually gets noisy.
+
+# Loud on failure. A reporter that fails quietly is the bug being fixed.
+if ! curl -sSf -X POST -H "Content-Type: application/json" \
+       -d "$PAYLOAD" "$NOTIFY_WEBHOOK" > /dev/null; then
+  echo "notify-failure: webhook POST failed" >&2
+  exit 1
 fi
 
-BODY="\`$WORKFLOW\` failed.
-
-Run: $RUN_URL
-
-Filed automatically by .forgejo/notify-failure.sh. One issue per workflow, not
-per run, so this stays open and quiet while the job keeps failing. Close it
-once fixed and the next failure opens a new one."
-
-curl -sSf -X POST \
-  -H "Authorization: token $FORGEJO_TOKEN" \
-  -H "Content-Type: application/json" \
-  "$FORGEJO_API/repos/$FORGEJO_REPO/issues" \
-  -d "$(jq -n --arg t "$TITLE" --arg b "$BODY" '{title:$t, body:$b}')" > /dev/null
-
-echo "opened issue: $TITLE"
+echo "notified: $WORKFLOW"
