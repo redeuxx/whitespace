@@ -1,0 +1,24 @@
+name: Notify selftest
+# TEMPORARY. Deleted before this branch merges. Exists only to make a job fail
+# on demand so the Report failure step can be exercised against the real API.
+on:
+  workflow_dispatch:
+
+jobs:
+  selftest:
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Fail on purpose
+        run: exit 1
+
+      - name: Report failure
+        if: failure()
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FJ_API_TOKEN }}
+          FORGEJO_API: ${{ github.server_url }}/api/v1
+          FORGEJO_REPO: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+        run: ./.forgejo/notify-failure.sh

@@ -35,3 +35,13 @@ jobs:
           # be pushed at all because mirror-release.yml creates GitHub
           # releases against tags it assumes already exist there.
           git push "$REMOTE" 'refs/tags/*:refs/tags/*'
+
+      - name: Report failure
+        if: failure()
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FJ_API_TOKEN }}
+          FORGEJO_API: ${{ github.server_url }}/api/v1
+          FORGEJO_REPO: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+        run: ./.forgejo/notify-failure.sh
