@@ -1,10 +1,11 @@
 name: Check lockfile sync
 
-# requirements.txt is generated from uv.lock, but Dependabot's pip ecosystem
-# edits it as a plain pin file and never touches the lock. That drift is
-# invisible: the Dockerfile installs requirements.txt, so the image ships
-# versions uv.lock never resolved. Seven packages had drifted before this job
-# existed. Fail the PR instead of finding out in production.
+# uv.lock is the only dependency source of truth. requirements.txt used to be
+# committed alongside it, and Dependabot treated every pin in that file as an
+# explicitly declared dependency: it edited them there and never touched the
+# lock, so the image shipped versions uv never resolved. That file is gone and
+# the Dockerfile now exports from the lock at build time, which leaves only one
+# thing to check.
 on:
   pull_request:
   push:
@@ -23,22 +24,3 @@ jobs:
 
       - name: uv.lock agrees with pyproject.toml
         run: uv lock --check
-
-      - name: requirements.txt matches uv.lock
-        run: |
-          set -eu
-
-          uv export --no-dev --no-hashes -o /tmp/expected.txt
-
-          # uv stamps the generating command into a header comment, and that
-          # line carries the -o path, so it differs by construction. Drop it
-          # from both sides; every other line is resolution output.
-          sed '/^#    uv export/d' requirements.txt > /tmp/have.clean
-          sed '/^#    uv export/d' /tmp/expected.txt > /tmp/expected.clean
-
-          if ! diff -u /tmp/have.clean /tmp/expected.clean; then
-            echo "::error::requirements.txt is out of sync with uv.lock. Regenerate with: uv lock && uv export --no-dev --no-hashes -o requirements.txt"
-            exit 1
-          fi
-
-          echo "ok: requirements.txt matches uv.lock"

@@ -39,3 +39,7 @@ Thumbs.db
 
 # Node / TypeScript
 node_modules/
+
+# Generated from uv.lock at build time; never commit it. Committing this file
+# makes Dependabot treat every transitive pin as a direct dependency.
+requirements.txt

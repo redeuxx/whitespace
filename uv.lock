@@ -499,7 +499,7 @@ wheels = [
 [[package]]
 name = "whitespace"
 version = "1.0.3"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "cryptography" },
     { name = "flask" },

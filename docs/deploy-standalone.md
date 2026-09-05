@@ -16,19 +16,21 @@ cd whitespace
 
 ### 2. Install dependencies
 
-Using uv (recommended):
+Using uv (recommended), which installs the exact versions pinned in
+`uv.lock`:
 
 ```sh
-uv pip install --system -r requirements.txt
+uv sync --no-dev
 ```
 
-Or with a virtual environment:
+Or with a virtual environment and plain pip, which resolves from
+`pyproject.toml` instead of the lock:
 
 ```sh
 python -m venv .venv
 source .venv/bin/activate      # Linux/macOS
 .venv\Scripts\activate         # Windows
-pip install -r requirements.txt
+pip install .
 ```
 
 ### 3. Configure environment

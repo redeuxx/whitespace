@@ -19,6 +19,15 @@ dependencies = [
     "wtforms>=3.2.2",
 ]
 
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+# Explicit, because the flat layout puts app/, migrations/ and tests/ side by
+# side and setuptools auto-discovery refuses to guess between them.
+[tool.setuptools]
+packages = ["app"]
+
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",

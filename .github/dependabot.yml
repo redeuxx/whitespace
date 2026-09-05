@@ -1,23 +1,19 @@
 version: 2
 updates:
-  # uv, not pip. The pip ecosystem edits requirements.txt as a flat pin file
-  # and never touches uv.lock, so it shipped versions the lock never resolved
-  # and failed check-lock-sync on every PR. The uv ecosystem updates
-  # pyproject.toml and uv.lock together; requirements.txt is regenerated from
-  # the lock by .github/workflows/dependabot-uv-export.yml.
+  # uv, not pip. The pip ecosystem edited requirements.txt as a flat pin file
+  # and never touched uv.lock, shipping versions the lock never resolved.
+  #
+  # requirements.txt is no longer committed at all. While it existed,
+  # Dependabot counted every pin in it as an explicitly declared dependency,
+  # so transitive packages like click and wrapt were bumped there and left the
+  # lock behind. With only pyproject.toml and uv.lock present they are
+  # correctly treated as indirect.
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
 
   - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
-  # .forgejo/workflows is watched by check-action-updates.yml, which greps only
-  # that directory. Nothing watched .github/workflows until this entry existed.
-  - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
