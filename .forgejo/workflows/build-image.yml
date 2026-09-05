@@ -49,3 +49,12 @@ jobs:
             docker tag "$IMAGE:$SHA_TAG" "$IMAGE:$MOVING"
             docker push "$IMAGE:$MOVING"
           fi
+
+      - name: Report failure
+        if: failure()
+        env:
+          NOTIFY_WEBHOOK: ${{ secrets.NOTIFY_WEBHOOK }}
+          REPO: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+        run: ./.forgejo/notify-failure.sh

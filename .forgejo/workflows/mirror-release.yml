@@ -8,6 +8,10 @@ jobs:
   mirror:
     runs-on: docker
     steps:
+      # Only here so the failure reporter below has the script on disk;
+      # the release call itself needs nothing from the working tree.
+      - uses: actions/checkout@v7
+
       - name: Create matching GitHub release
         env:
           GH_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
@@ -31,3 +35,12 @@ jobs:
                   --argjson prerelease "$PRERELEASE" \
                   --argjson draft "$DRAFT" \
                   '{tag_name:$tag, target_commitish:$target, name:$name, body:$body, prerelease:$prerelease, draft:$draft}')"
+
+      - name: Report failure
+        if: failure()
+        env:
+          NOTIFY_WEBHOOK: ${{ secrets.NOTIFY_WEBHOOK }}
+          REPO: ${{ github.repository }}
+          WORKFLOW: ${{ github.workflow }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_number }}
+        run: ./.forgejo/notify-failure.sh
