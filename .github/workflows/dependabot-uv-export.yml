@@ -17,6 +17,14 @@ name: Resync requirements.txt on Dependabot PRs
 on:
   pull_request:
 
+# Dependabot force-pushes a branch when it rebases, and this job answers by
+# pushing a commit of its own. Two overlapping runs on the same branch would
+# race, and the loser fails on a non-fast-forward push. One run per branch,
+# newest wins.
+concurrency:
+  group: uv-export-${{ github.head_ref }}
+  cancel-in-progress: true
+
 # Dependabot-triggered runs get a read-only GITHUB_TOKEN unless the permissions
 # key grants more. Nothing else here needs write.
 permissions:
