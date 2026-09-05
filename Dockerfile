@@ -9,6 +9,12 @@ WORKDIR /app
 # uv.lock is the only source of truth; requirements.txt is no longer committed
 # because Dependabot treated every pin in it as an explicitly declared
 # dependency and edited it without touching the lock.
+#
+# Do not give this project a [build-system]. It makes uv treat the root as
+# installable rather than virtual, so uv export tries to build it here and
+# fails with "package directory 'app' does not exist" - only pyproject.toml
+# and uv.lock are copied at this point, deliberately, to keep the layer
+# cached across application changes.
 COPY pyproject.toml uv.lock ./
 RUN uv export --frozen --no-dev --no-hashes -o /tmp/requirements.txt \
  && uv pip install --system --no-cache -r /tmp/requirements.txt \

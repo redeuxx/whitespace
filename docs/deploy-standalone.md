@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Python 3.14+
-- [uv](https://github.com/astral-sh/uv) (recommended) or pip
+- [uv](https://github.com/astral-sh/uv)
 
 ## Steps
 
@@ -16,21 +16,23 @@ cd whitespace
 
 ### 2. Install dependencies
 
-Using uv (recommended), which installs the exact versions pinned in
-`uv.lock`:
+Dependencies are pinned in `uv.lock`, which is the only source of truth, so
+[uv](https://github.com/astral-sh/uv) is needed to install them:
 
 ```sh
 uv sync --no-dev
 ```
 
-Or with a virtual environment and plain pip, which resolves from
-`pyproject.toml` instead of the lock:
+That creates `.venv` with the exact locked versions. To use pip instead,
+generate a requirements file from the lock first (it is gitignored on
+purpose, committing it is what caused dependency updates to drift):
 
 ```sh
+uv export --no-dev --no-hashes -o requirements.txt
 python -m venv .venv
 source .venv/bin/activate      # Linux/macOS
 .venv\Scripts\activate         # Windows
-pip install .
+pip install -r requirements.txt
 ```
 
 ### 3. Configure environment
