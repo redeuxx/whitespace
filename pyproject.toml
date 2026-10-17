@@ -14,7 +14,7 @@ dependencies = [
     "gunicorn>=26.2.0",
     "pygments>=2.20.0",
     "python-dotenv>=1.0.0",
-    "cryptography>=50.0.1",
+    "cryptography>=50.0.2",
     "werkzeug>=3.1.9",
     "wtforms>=3.2.2",
 ]
