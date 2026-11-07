@@ -1,0 +1,21 @@
+name: Check lockfile sync
+
+# uv.lock is the only dependency source of truth; the Dockerfile exports from
+# it at build time. Catches a pyproject.toml edit that never re-locked.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+      - name: uv.lock agrees with pyproject.toml
+        run: uv lock --check
