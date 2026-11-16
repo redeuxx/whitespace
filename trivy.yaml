@@ -1,0 +1,13 @@
+# Trivy config, read from the working directory. Scans run locally only.
+# Exceptions go in .trivyignore (one CVE per line, with reason and exp:YYYY-MM-DD),
+# mirrored in .grype.yaml with the same reason.
+severity:
+  - HIGH
+  - CRITICAL
+exit-code: 1
+scan:
+  skip-dirs:
+    - .venv
+    - node_modules
+    - uploads
+    - tests/uploads_test
