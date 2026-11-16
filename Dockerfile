@@ -1,7 +1,7 @@
-FROM python:3.14-slim
+FROM python:3.14-alpine
 
-# Copy the uv binary from Astral's official image
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+# Pull OS security fixes released after the base image was built.
+RUN apk upgrade --no-cache
 
 WORKDIR /app
 
@@ -15,10 +15,16 @@ WORKDIR /app
 # fails with "package directory 'app' does not exist" - only pyproject.toml
 # and uv.lock are copied at this point, deliberately, to keep the layer
 # cached across application changes.
+#
+# uv is mounted from Astral's image only for this step, so it never ships.
+# pip is removed: nothing uses it at runtime, and its vendored urllib3,
+# msgpack and setuptools carry CVEs that scanners flag.
 COPY pyproject.toml uv.lock ./
-RUN uv export --frozen --no-dev --no-hashes -o /tmp/requirements.txt \
+RUN --mount=from=ghcr.io/astral-sh/uv:latest,source=/uv,target=/bin/uv \
+    uv export --frozen --no-dev --no-hashes -o /tmp/requirements.txt \
  && uv pip install --system --no-cache -r /tmp/requirements.txt \
- && rm /tmp/requirements.txt
+ && rm /tmp/requirements.txt \
+ && python -m pip uninstall -y -q pip
 
 # Copy application code
 COPY . .

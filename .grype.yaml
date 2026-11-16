@@ -7,4 +7,33 @@ exclude:
   - ./node_modules/**
   - ./uploads/**
   - ./tests/uploads_test/**
-ignore: []
+ignore:
+  # Trivy does not flag these, so they have no .trivyignore counterpart.
+  # Only 3.14.10 affected, and only with OpenSSL in FIPS mode, which Alpine's
+  # OpenSSL is not. Drop once python:3.14-alpine ships 3.14.11.
+  # expires 2026-12-15
+  - vulnerability: CVE-2026-119170
+    package:
+      name: python
+  # SQLite CLI .recover command injection. The image ships only the library,
+  # not the sqlite3 CLI. No fixed Alpine package yet.
+  # expires 2027-01-15
+  - vulnerability: CVE-2026-119586
+    package:
+      name: sqlite-libs
+  # Session extension changeset overflow. Python's sqlite3 module does not
+  # expose the session API. No fixed Alpine package yet.
+  # expires 2027-01-15
+  - vulnerability: CVE-2026-119379
+    package:
+      name: sqlite-libs
+  # FTS5 overflows. The app creates no FTS5 tables and its database is never
+  # user-supplied. No fixed Alpine package yet.
+  # expires 2027-01-15
+  - vulnerability: CVE-2026-119374
+    package:
+      name: sqlite-libs
+  # expires 2027-01-15
+  - vulnerability: CVE-2026-119373
+    package:
+      name: sqlite-libs
