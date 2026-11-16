@@ -29,13 +29,19 @@ RUN --mount=from=ghcr.io/astral-sh/uv:latest,source=/uv,target=/bin/uv \
 # Copy application code
 COPY . .
 
-# Ensure data directories exist
-RUN mkdir -p uploads instance
+# Run as an unprivileged user that owns only the data directories. New named
+# volumes inherit this ownership; volumes created by older root images need a
+# one-time chown (see docs/deploy-docker.md).
+RUN adduser -D -u 1000 app \
+ && mkdir -p uploads instance \
+ && chown app:app uploads instance
 
 # flask db upgrade needs this to locate the app
 ENV FLASK_APP=run.py
 
 RUN chmod +x entrypoint.sh
+
+USER app
 
 EXPOSE 8118
 

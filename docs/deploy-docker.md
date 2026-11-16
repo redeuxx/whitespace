@@ -80,6 +80,19 @@ To back up the database:
 docker compose cp web:/app/instance/whitespace.db ./whitespace.db.bak
 ```
 
+### Upgrading from a root image
+
+The container runs as user `app` (uid 1000). Volumes created by older images
+that ran as root are owned by root, so the app cannot write to them. Fix the
+ownership once, then rebuild:
+
+```sh
+docker compose build
+docker compose down
+docker compose run --rm --no-deps --user root --entrypoint chown web -R app:app /app/uploads /app/instance
+docker compose up -d
+```
+
 ## Changing the port
 
 The app listens on **8118** internally (set in `entrypoint.sh`). To expose it on a different host port, edit `docker-compose.yml`:
