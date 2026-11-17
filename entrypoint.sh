@@ -12,4 +12,6 @@ done
 
 flask db upgrade
 
-exec gunicorn --bind 0.0.0.0:8118 --workers 2 run:app
+# ponytail: one worker so Flask-Limiter's in-memory counts are shared by all
+# requests; move limits to Redis before adding workers.
+exec gunicorn --bind 0.0.0.0:8118 --workers 1 --threads 4 run:app
