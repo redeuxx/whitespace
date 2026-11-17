@@ -1,6 +1,6 @@
 # Grype config, read from the working directory. Scans run locally only.
-# Every ignore entry mirrors one in .trivyignore (same CVE, same reason) and
-# carries a "# expires YYYY-MM-DD" comment, since Grype has no expiry field.
+# Ignores carry "# expires YYYY-MM-DD" (Grype has no expiry field); any CVE
+# Trivy also flags gets the same reason in .trivyignore.
 fail-on-severity: high
 exclude:
   - ./.venv/**

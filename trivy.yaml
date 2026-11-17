@@ -1,6 +1,6 @@
 # Trivy config, read from the working directory. Scans run locally only.
-# Exceptions go in .trivyignore (one CVE per line, with reason and exp:YYYY-MM-DD),
-# mirrored in .grype.yaml with the same reason.
+# Exceptions, when needed, go in .trivyignore (reason and exp:YYYY-MM-DD),
+# mirrored in .grype.yaml.
 severity:
   - HIGH
   - CRITICAL
