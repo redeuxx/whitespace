@@ -10,20 +10,14 @@ WORKDIR /app
 # because Dependabot treated every pin in it as an explicitly declared
 # dependency and edited it without touching the lock.
 #
-# Do not give this project a [build-system]. It makes uv treat the root as
-# installable rather than virtual, so uv export tries to build it here and
-# fails with "package directory 'app' does not exist" - only pyproject.toml
-# and uv.lock are copied at this point, deliberately, to keep the layer
-# cached across application changes.
-#
 # uv is mounted from Astral's image only for this step, so it never ships.
-# pip is removed: nothing uses it at runtime, and its vendored urllib3,
-# msgpack and setuptools carry CVEs that scanners flag.
+# It syncs the lock straight into the system Python. pip is removed: nothing
+# uses it at runtime, and its vendored urllib3, msgpack and setuptools carry
+# CVEs that scanners flag. uv sync leaves pip alone, so uninstall it here.
+ENV UV_PROJECT_ENVIRONMENT=/usr/local UV_PYTHON_DOWNLOADS=never
 COPY pyproject.toml uv.lock ./
-RUN --mount=from=ghcr.io/astral-sh/uv:latest,source=/uv,target=/bin/uv \
-    uv export --frozen --no-dev --no-hashes -o /tmp/requirements.txt \
- && uv pip install --system --no-cache -r /tmp/requirements.txt \
- && rm /tmp/requirements.txt \
+RUN --mount=from=ghcr.io/astral-sh/uv:0.13.6,source=/uv,target=/bin/uv \
+    uv sync --frozen --no-dev --no-install-project --no-cache \
  && python -m pip uninstall -y -q pip
 
 # Copy application code
