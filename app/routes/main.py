@@ -31,7 +31,7 @@ def check_banned():
         client = ipaddress.ip_address(ip)
     except ValueError:
         return
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     for ban in BannedIP.query.all():
         if ban.expires_at is not None and ban.expires_at.replace(tzinfo=None) <= now:
             db.session.delete(ban)
