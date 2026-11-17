@@ -258,3 +258,16 @@ class TestAttachmentServing:
         assert rv.headers.get('Content-Type') == 'image/png'
         assert 'attachment' not in rv.headers.get('Content-Disposition', '')
         assert rv.headers.get('X-Content-Type-Options') == 'nosniff'
+
+
+class TestBanUsesProxiedClientIP:
+    def test_spoofed_leftmost_forwarded_for_does_not_bypass_ban(self, app, client):
+        # The proxy appends the real client IP; a client-sent value sits to its left.
+        from app.extensions import db
+        from app.models import BannedIP
+
+        db.session.add(BannedIP(ip_address='9.9.9.9'))
+        db.session.commit()
+        headers = {'X-Forwarded-For': '6.6.6.6, 9.9.9.9'}
+        assert client.get('/', headers=headers).status_code == 403
+        assert client.get('/admin/login', headers=headers).status_code == 403

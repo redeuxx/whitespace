@@ -39,7 +39,7 @@ def load_user(user_id):
 
 @admin_bp.before_request
 def check_banned():
-    ip_str = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    ip_str = request.remote_addr
     try:
         client = ipaddress.ip_address(ip_str)
     except ValueError:

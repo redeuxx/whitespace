@@ -20,13 +20,9 @@ from ..utils import (
 main_bp = Blueprint('main', __name__)
 
 
-def get_client_ip():
-    return request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
-
-
 @main_bp.before_request
 def check_banned():
-    ip = get_client_ip()
+    ip = request.remote_addr
     try:
         client = ipaddress.ip_address(ip)
     except ValueError:
@@ -138,7 +134,7 @@ def new_paste():
             password_hash=password_hash,
             expires_at=expires_at,
             burn_after_read=burn_after_read,
-            ip_address=get_client_ip(),
+            ip_address=request.remote_addr,
             parent_slug=parent_slug,
         )
         db.session.add(paste)
