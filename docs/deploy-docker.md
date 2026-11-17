@@ -46,7 +46,7 @@ docker compose up -d --build
 This will:
 - Build the image from the checkout
 - Run database migrations automatically
-- Start gunicorn on port **8118** with 2 workers
+- Start gunicorn on port **8118** (one worker, four threads)
 - Persist uploads and the SQLite database in named Docker volumes
 
 ### 4. Access the app
@@ -89,7 +89,7 @@ ownership once, then rebuild:
 ```sh
 docker compose build
 docker compose down
-docker compose run --rm --no-deps --user root --entrypoint chown web -R app:app /app/uploads /app/instance
+docker compose run --rm --user root --entrypoint chown web -R app:app /app/uploads /app/instance
 docker compose up -d
 ```
 
