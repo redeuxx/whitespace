@@ -266,7 +266,7 @@ def ban_ip():
 @admin_bp.route('/ips/<int:ban_id>/unban', methods=['POST'])
 @login_required
 def unban_ip(ban_id):
-    ban = BannedIP.query.get_or_404(ban_id)
+    ban = db.get_or_404(BannedIP, ban_id)
     ip = ban.ip_address
     db.session.delete(ban)
     db.session.commit()

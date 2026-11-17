@@ -222,7 +222,7 @@ class TestAdminIPs:
         assert rv.status_code == 200
 
         with app.app_context():
-            assert BannedIP.query.get(ban_id) is None
+            assert db.session.get(BannedIP, ban_id) is None
 
     def test_duplicate_ban_shows_warning(self, admin_client, app):
         from app.extensions import db
