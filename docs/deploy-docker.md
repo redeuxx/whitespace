@@ -95,12 +95,14 @@ docker compose up -d
 
 ## Changing the port
 
-The app listens on **8118** internally (set in `entrypoint.sh`). To expose it on a different host port, edit `docker-compose.yml`:
+The app listens on **8118** internally (set in `entrypoint.sh`). To use a different host port, edit `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "9000:8118"   # host:container
+  - "127.0.0.1:9000:8118"   # host:container
 ```
+
+Keep the `127.0.0.1:` prefix. The app takes the client IP from the last `X-Forwarded-For` entry, which only a reverse proxy should set. Your proxy must add or overwrite that header (nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`). Without it, clients can fake their IP and get around bans and rate limits.
 
 ## Using a production database
 

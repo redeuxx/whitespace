@@ -4,7 +4,9 @@ services:
     image: whitespace:latest
     build: .
     ports:
-      - "8118:8118"
+      # Loopback only: the app trusts X-Forwarded-For from one proxy, so it
+      # must not be reachable except through that proxy.
+      - "127.0.0.1:8118:8118"
     volumes:
       - uploads_data:/app/uploads
       - db_data:/app/instance
