@@ -13,3 +13,4 @@ instance/
 .gitignore
 .vscode/
 .idea/
+*.egg-info/
