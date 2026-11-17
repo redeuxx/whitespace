@@ -39,5 +39,8 @@ See [.env.example](.env.example) for all configuration options (file upload limi
 ```sh
 cd whitespace/
 git pull
-docker compose up -d --build
+docker compose build --pull --no-cache
+docker compose up -d
 ```
+
+`--pull --no-cache` picks up base image and Alpine security updates that a cached build would skip.

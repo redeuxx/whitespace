@@ -62,7 +62,7 @@ The admin panel is at [http://localhost:8118/admin](http://localhost:8118/admin)
 | View logs | `docker compose logs -f` |
 | Stop | `docker compose down` |
 | Restart | `docker compose restart` |
-| Deploy a new build | `git pull && docker compose up -d --build` |
+| Deploy a new build | `git pull && docker compose build --pull --no-cache && docker compose up -d` |
 | Roll back to a known commit | `git checkout <sha>` then `docker compose up -d --build` |
 
 ## Data persistence
