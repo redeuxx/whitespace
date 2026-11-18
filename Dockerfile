@@ -14,7 +14,9 @@ WORKDIR /app
 # It syncs the lock straight into the system Python. pip is removed: nothing
 # uses it at runtime, and its vendored urllib3, msgpack and setuptools carry
 # CVEs that scanners flag. uv sync leaves pip alone, so uninstall it here.
-ENV UV_PROJECT_ENVIRONMENT=/usr/local UV_PYTHON_DOWNLOADS=never
+# Bytecode is compiled at build time: the runtime user cannot write .pyc
+# files, so without this every start recompiles everything in memory.
+ENV UV_PROJECT_ENVIRONMENT=/usr/local UV_PYTHON_DOWNLOADS=never UV_COMPILE_BYTECODE=1
 COPY pyproject.toml uv.lock ./
 RUN --mount=from=ghcr.io/astral-sh/uv:0.13.6,source=/uv,target=/bin/uv \
     uv sync --frozen --no-dev --no-install-project --no-cache \
@@ -26,7 +28,7 @@ COPY . .
 # Run as an unprivileged user that owns only the data directories. New named
 # volumes inherit this ownership; volumes created by older root images need a
 # one-time chown (see docs/deploy-docker.md).
-RUN adduser -D -u 1000 app \
+RUN python -m compileall -q app  && adduser -D -u 1000 app \
  && mkdir -p uploads instance \
  && chown app:app uploads instance
 
