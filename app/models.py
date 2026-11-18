@@ -21,7 +21,7 @@ class Paste(db.Model):
     view_count = db.Column(db.Integer, default=0, nullable=False)
     ip_address = db.Column(db.String(45))
     parent_slug = db.Column(db.String(20))
-    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False, index=True)
 
     attachments = db.relationship(
         'Attachment', backref='paste', lazy=True, cascade='all, delete-orphan'
@@ -53,7 +53,7 @@ class Attachment(db.Model):
     __tablename__ = 'attachments'
 
     id = db.Column(db.Integer, primary_key=True)
-    paste_id = db.Column(db.Integer, db.ForeignKey('pastes.id'), nullable=False)
+    paste_id = db.Column(db.Integer, db.ForeignKey('pastes.id'), nullable=False, index=True)
     original_filename = db.Column(db.String(255), nullable=False)
     stored_filename = db.Column(db.String(255), nullable=False)
     file_size = db.Column(db.Integer)

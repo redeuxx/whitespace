@@ -7,6 +7,7 @@ from flask import (
     redirect, render_template, request, send_from_directory,
     session, url_for,
 )
+from sqlalchemy.orm import selectinload
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..extensions import db, limiter
@@ -70,7 +71,7 @@ def index():
             Paste.is_private == False,  # noqa: E712
             Paste.burn_after_read == False,  # noqa: E712
             db.or_(Paste.expires_at.is_(None), Paste.expires_at > now),
-        ).order_by(Paste.created_at.desc())
+        ).options(selectinload(Paste.attachments)).order_by(Paste.created_at.desc())
         pagination = query.paginate(
             page=page,
             per_page=current_app.config['PASTES_PER_PAGE'],
