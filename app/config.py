@@ -34,6 +34,9 @@ class Config:
     UPLOAD_FOLDER = os.path.abspath(os.environ.get('UPLOAD_FOLDER', 'uploads'))
     MAX_FILE_SIZE = int(os.environ.get('MAX_FILE_SIZE_MB', '10')) * 1024 * 1024
     MAX_ATTACHMENTS = int(os.environ.get('MAX_ATTACHMENTS', '10'))
+    # Reject oversized bodies before Werkzeug spools them to disk: every
+    # allowed attachment at full size plus 1 MB for the form fields.
+    MAX_CONTENT_LENGTH = MAX_FILE_SIZE * MAX_ATTACHMENTS + 1024 * 1024
 
     RATE_LIMIT_PASTE = os.environ.get('RATE_LIMIT_PASTE', '20 per hour')
     RATE_LIMIT_SEARCH = os.environ.get('RATE_LIMIT_SEARCH', '60 per hour')

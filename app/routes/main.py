@@ -97,6 +97,10 @@ def index():
 def new_paste():
     if request.method == 'POST':
         content = request.form.get('content', '').strip()
+        # Multipart fields are capped by MAX_FORM_MEMORY_SIZE, urlencoded ones
+        # are not: apply the same cap to both.
+        if len(content) > current_app.config['MAX_FORM_MEMORY_SIZE']:
+            abort(413)
         if not content:
             flash('Paste content cannot be empty.', 'danger')
             return render_template('new_paste.html', expiry_options=EXPIRY_OPTIONS,
