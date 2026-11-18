@@ -111,7 +111,7 @@ def _manual_detect(text):
     # SQL - require compound statement starters anchored to line beginnings;
     # bare keywords like SELECT/FROM/TABLE are common React/MUI component names in TSX
     if re.search(
-        r'^\s*(SELECT\s+[\w*]|INSERT\s+INTO\s+\w|DELETE\s+FROM\s+\w|'
+        r'^[ \t]*(SELECT\s+[\w*]|INSERT\s+INTO\s+\w|DELETE\s+FROM\s+\w|'
         r'CREATE\s+TABLE\s+\w|DROP\s+TABLE\s+\w|ALTER\s+TABLE\s+\w|'
         r'UPDATE\s+\w+\s+SET\s+\w)',
         text, re.IGNORECASE | re.MULTILINE
@@ -134,9 +134,9 @@ def _manual_detect(text):
     # use #include for macro headers (e.g. RISC-V/ARM test suites).
     # .section/.globl at line-start are essentially exclusive to assemblers;
     # two or more GAS pseudo-op directives is a reliable signal.
-    _ASM_DIRECTIVES = r'^\s*\.(section|text|data|bss|global|globl|macro|endm|align|balign|byte|word|long|quad|fill|skip|space|zero|equ|set|type|size|string|asciz|ascii)\b'
+    _ASM_DIRECTIVES = r'^[ \t]*\.(section|text|data|bss|global|globl|macro|endm|align|balign|byte|word|long|quad|fill|skip|space|zero|equ|set|type|size|string|asciz|ascii)\b'
     if re.search(_ASM_DIRECTIVES, text, M):
-        if re.search(r'^\s*\.(macro|endm)\b', text, M) or \
+        if re.search(r'^[ \t]*\.(macro|endm)\b', text, M) or \
            len(re.findall(_ASM_DIRECTIVES, text, M)) >= 2:
             return 'x86asm'
 
@@ -236,7 +236,7 @@ def _manual_detect(text):
         return 'erlang'
 
     # Clojure - S-expression with defn/def
-    if re.search(r'^\s*\(def(n|module|record|protocol)?\s+', text, M):
+    if re.search(r'^[ \t]*\(def(n|module|record|protocol)?\s+', text, M):
         return 'clojure'
 
     # Dart
@@ -261,7 +261,7 @@ def _manual_detect(text):
 
     # SCSS - $variable: value syntax is the only unambiguous SCSS signal;
     # nested braces alone match C/C++/nginx/etc. so that heuristic is dropped
-    if re.search(r'^\s*\$\w+\s*:', text, M):
+    if re.search(r'^[ \t]*\$\w+\s*:', text, M):
         return 'scss'
 
     # CSS - selector block + at least one recognisable CSS property
@@ -305,7 +305,7 @@ def _manual_detect(text):
 
     # YAML - key: value structure (last resort; many config formats look like YAML)
     if re.search(r'^---', text, M) or \
-       (re.search(r'^\w[\w\s]*:\s+\S', text, M) and
+       (re.search(r'^\w[\w \t]*:\s+\S', text, M) and
         re.search(r'^\s+-\s+\S', text, M)):
         return 'yaml'
 
@@ -320,11 +320,11 @@ def detect_language(content):
     # Assembly files often open with large comment blocks (copyright headers,
     # test-case descriptions) that push directives past the 4000-char window.
     # Scan a wider slice specifically for assembly before running other checks.
-    _ASM_DIR = r'^\s*\.(section|text|data|bss|global|globl|macro|endm|align|balign|byte|word|long|quad|fill|skip|space|zero|equ|set|type|size|string|asciz|ascii)\b'
+    _ASM_DIR = r'^[ \t]*\.(section|text|data|bss|global|globl|macro|endm|align|balign|byte|word|long|quad|fill|skip|space|zero|equ|set|type|size|string|asciz|ascii)\b'
     extended = content[:16000]
     M = re.MULTILINE
     if re.search(_ASM_DIR, extended, M):
-        if re.search(r'^\s*\.(macro|endm)\b', extended, M) or \
+        if re.search(r'^[ \t]*\.(macro|endm)\b', extended, M) or \
            len(re.findall(_ASM_DIR, extended, M)) >= 2:
             return 'x86asm'
 
