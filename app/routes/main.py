@@ -1,4 +1,3 @@
-import ipaddress
 import os
 from datetime import datetime, timezone
 
@@ -7,41 +6,22 @@ from flask import (
     redirect, render_template, request, send_from_directory,
     session, url_for,
 )
+from sqlalchemy import delete, update
 from sqlalchemy.orm import selectinload
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..extensions import db, limiter
-from ..models import Attachment, BannedIP, Paste, SiteSetting
+from ..models import Attachment, Paste, SiteSetting
 from ..utils import (
-    EXPIRY_OPTIONS, HLJS_LANGUAGES, decrypt_content, detect_language,
+    EXPIRY_OPTIONS, HLJS_LANGUAGES, check_banned, decrypt_content, detect_language,
     encrypt_content, extract_title, fetch_url_title, generate_slug, is_single_url,
-    parse_expiry, save_attachment, time_ago, time_until,
+    parse_expiry, remove_attachment_files, save_attachment, time_ago, time_until,
 )
 
 main_bp = Blueprint('main', __name__)
 
 
-@main_bp.before_request
-def check_banned():
-    ip = request.remote_addr
-    try:
-        client = ipaddress.ip_address(ip)
-    except ValueError:
-        return
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    for ban in BannedIP.query.all():
-        if ban.expires_at is not None and ban.expires_at.replace(tzinfo=None) <= now:
-            db.session.delete(ban)
-            db.session.commit()
-            continue
-        try:
-            if '/' in ban.ip_address:
-                if client in ipaddress.ip_network(ban.ip_address, strict=False):
-                    abort(403)
-            elif client == ipaddress.ip_address(ban.ip_address):
-                abort(403)
-        except ValueError:
-            continue
+main_bp.before_request(check_banned)
 
 
 @main_bp.context_processor
@@ -209,8 +189,10 @@ def view_paste(slug):
     paste = Paste.query.filter_by(slug=slug).first_or_404()
 
     if paste.is_expired:
+        stored = [a.stored_filename for a in paste.attachments]
         db.session.delete(paste)
         db.session.commit()
+        remove_attachment_files(stored, current_app.config['UPLOAD_FOLDER'])
         abort(410)
 
     # Password check
@@ -264,11 +246,27 @@ def view_paste(slug):
         return render_template('view_paste.html', paste=paste, content=content, burn_preview=True,
                                parent_paste=parent_paste)
 
-    # Increment view count
-    paste.view_count += 1
-    db.session.commit()
-
     burn = paste.burn_after_read
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    if burn:
+        # Claim the paste before rendering it. The DELETE takes SQLite's write
+        # lock until commit, so a concurrent viewer waits here, then deletes
+        # 0 rows and gets 410 instead of a second copy.
+        stored = [a.stored_filename for a in paste.attachments]
+        nosync = {'synchronize_session': False}
+        claimed = db.session.execute(
+            delete(Paste).where(Paste.id == paste.id), execution_options=nosync).rowcount
+        if claimed != 1:
+            db.session.rollback()
+            abort(410)
+        db.session.execute(
+            delete(Attachment).where(Attachment.paste_id == paste.id), execution_options=nosync)
+    else:
+        # Increment in SQL: a read-modify-write in Python loses concurrent views.
+        db.session.execute(
+            update(Paste).where(Paste.id == paste.id).values(view_count=Paste.view_count + 1),
+            execution_options={'synchronize_session': False})
+        db.session.commit()
 
     if is_single_url(content):
         creator_views = session.get('url_creator_views', [])
@@ -286,11 +284,8 @@ def view_paste(slug):
                                                  burn_preview=False, parent_paste=parent_paste))
 
     if burn:
-        try:
-            db.session.delete(paste)
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
+        db.session.commit()
+        remove_attachment_files(stored, upload_folder)
 
     return response
 

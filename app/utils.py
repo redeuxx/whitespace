@@ -210,6 +210,43 @@ def parse_expiry(expiry_str):
         return None, False
 
 
+def check_banned():
+    """before_request hook: 403 for banned client IPs, pruning expired bans."""
+    from flask import abort, request
+    from .extensions import db
+    from .models import BannedIP
+    try:
+        client = ipaddress.ip_address(request.remote_addr)
+    except ValueError:
+        return
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    # ponytail: scans every ban (~6 us each); add a cache if bans reach 10k+.
+    active, expired = [], []
+    for ban in BannedIP.query.all():
+        if ban.expires_at is not None and ban.expires_at.replace(tzinfo=None) <= now:
+            expired.append(ban.id)
+        else:
+            active.append(ban.ip_address)
+    if expired:
+        BannedIP.query.filter(BannedIP.id.in_(expired)).delete(synchronize_session=False)
+        db.session.commit()
+    for entry in active:
+        try:
+            if client in ipaddress.ip_network(entry, strict=False):
+                abort(403)
+        except ValueError:
+            continue
+
+
+def remove_attachment_files(stored_filenames, upload_folder):
+    """Delete stored attachment files, ignoring ones already gone."""
+    for name in stored_filenames:
+        try:
+            os.remove(os.path.join(upload_folder, name))
+        except OSError:
+            pass
+
+
 def save_attachment(file, upload_folder):
     """Save an uploaded file and return (original_filename, stored_filename, size)."""
     original = secure_filename(file.filename)

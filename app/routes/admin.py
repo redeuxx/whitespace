@@ -1,5 +1,4 @@
 import ipaddress
-import os
 import tomllib
 import urllib.error
 import urllib.parse
@@ -7,14 +6,14 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 from flask import (
-    Blueprint, abort, current_app, flash, redirect,
+    Blueprint, current_app, flash, redirect,
     render_template, request, url_for,
 )
 from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
 
 from ..extensions import db, login_manager
 from ..models import Attachment, BannedIP, Paste, SiteSetting
-from ..utils import EXPIRY_OPTIONS, time_ago, time_until
+from ..utils import EXPIRY_OPTIONS, check_banned, remove_attachment_files, time_ago, time_until
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -37,27 +36,7 @@ def load_user(user_id):
 
 # IP BAN CHECK
 
-@admin_bp.before_request
-def check_banned():
-    ip_str = request.remote_addr
-    try:
-        client = ipaddress.ip_address(ip_str)
-    except ValueError:
-        return
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    for ban in BannedIP.query.all():
-        if ban.expires_at is not None and ban.expires_at.replace(tzinfo=None) <= now:
-            db.session.delete(ban)
-            db.session.commit()
-            continue
-        try:
-            if '/' in ban.ip_address:
-                if client in ipaddress.ip_network(ban.ip_address, strict=False):
-                    abort(403)
-            elif client == ipaddress.ip_address(ban.ip_address):
-                abort(403)
-        except ValueError:
-            continue
+admin_bp.before_request(check_banned)
 
 
 # CONTEXT PROCESSOR
@@ -172,15 +151,10 @@ def pastes():
 @login_required
 def delete_paste(slug):
     paste = Paste.query.filter_by(slug=slug).first_or_404()
-    for att in paste.attachments:
-        try:
-            path = os.path.join(current_app.config['UPLOAD_FOLDER'], att.stored_filename)
-            if os.path.exists(path):
-                os.remove(path)
-        except Exception:
-            pass
+    stored = [a.stored_filename for a in paste.attachments]
     db.session.delete(paste)
     db.session.commit()
+    remove_attachment_files(stored, current_app.config['UPLOAD_FOLDER'])
     flash(f'Paste {slug} deleted.', 'success')
     referrer = request.referrer or ''
     if f'/p/{slug}' in referrer:
@@ -197,16 +171,11 @@ def purge_expired():
         Paste.expires_at < now,
     ).all()
     count = len(expired)
+    stored = [a.stored_filename for p in expired for a in p.attachments]
     for paste in expired:
-        for att in paste.attachments:
-            try:
-                path = os.path.join(current_app.config['UPLOAD_FOLDER'], att.stored_filename)
-                if os.path.exists(path):
-                    os.remove(path)
-            except Exception:
-                pass
         db.session.delete(paste)
     db.session.commit()
+    remove_attachment_files(stored, current_app.config['UPLOAD_FOLDER'])
     flash(f'Purged {count} expired paste(s).', 'success')
     return redirect(url_for('admin.pastes'))
 
