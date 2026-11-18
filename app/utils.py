@@ -1,5 +1,6 @@
 import base64
 import html
+import http.client
 import ipaddress
 import os
 import random
@@ -7,10 +8,11 @@ import re
 import secrets
 import socket
 import string
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from urllib.error import URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from werkzeug.utils import secure_filename
 
@@ -126,8 +128,29 @@ def _resolve_safe_host(url):
     return ip_str, parsed
 
 
-def fetch_url_title(url, timeout=5):
-    """Fetch the <title> of a URL. Returns the title string or None on failure."""
+class _NoRedirect(HTTPRedirectHandler):
+    # A redirect target would skip the private-IP check, so never follow one.
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+_opener = build_opener(_NoRedirect)
+
+# ponytail: title fetches run on a 2-thread pool so a slow or slow-dripping
+# site can stall at most these 2 threads, never a gunicorn request thread.
+# When both are stuck, new pastes just fall back to extract_title.
+_title_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix='url-title')
+
+
+def fetch_url_title(url, timeout=3):
+    """Fetch the <title> of a URL, waiting at most `timeout` seconds. None on failure."""
+    try:
+        return _title_pool.submit(_fetch_url_title, url, timeout).result(timeout=timeout)
+    except TimeoutError:
+        return None
+
+
+def _fetch_url_title(url, timeout):
     try:
         ip_str, parsed = _resolve_safe_host(url)
     except (OSError, ValueError):
@@ -143,13 +166,13 @@ def fetch_url_title(url, timeout=5):
             'User-Agent': 'Mozilla/5.0 (compatible; Whitespace/1.0)',
             'Host': parsed.netloc,
         })
-        with urlopen(req, timeout=timeout) as resp:
+        with _opener.open(req, timeout=timeout) as resp:
             # Only read the first 32 KB - the title is always in the <head>
             chunk = resp.read(32768).decode('utf-8', errors='replace')
         m = _TITLE_RE.search(chunk)
         if m:
             return html.unescape(m.group(1).strip())[:120]
-    except (URLError, OSError, ValueError):
+    except (URLError, OSError, ValueError, http.client.HTTPException):
         pass
     return None
 
