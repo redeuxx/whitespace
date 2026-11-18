@@ -43,8 +43,15 @@ function initWhitespace() {
     // SYNTAX HIGHLIGHTING + LINE NUMBERS
     document.querySelectorAll('pre code.hljs-target').forEach(block => {
         var _a;
+        var _b;
+        // textContent, read before highlighting: same text, no forced layout.
+        const text = (_b = block.textContent) !== null && _b !== void 0 ? _b : '';
+        // ponytail: auto-detection runs every grammar (seconds on a 500 KB log),
+        // so big pastes the server could not classify render as plain text.
+        if (text.length > 100000 && !/\blanguage-/.test(block.className)) {
+            block.classList.add('language-plaintext');
+        }
         hljs.highlightElement(block);
-        const text = block.innerText;
         const count = text.endsWith('\n') ? text.split('\n').length - 1 : text.split('\n').length;
         const gutter = document.createElement('div');
         gutter.className = 'line-numbers';
@@ -119,11 +126,12 @@ function initWhitespace() {
     const fileList = document.getElementById('file-list');
     const maxFiles = parseInt((_a = fileList === null || fileList === void 0 ? void 0 : fileList.dataset.max) !== null && _a !== void 0 ? _a : '10');
     function renderFileList() {
-        var _a, _b, _c;
+        var _a;
+        var _b, _c;
         if (!fileInput || !fileList)
             return;
         fileList.innerHTML = '';
-        const files = Array.from((_a = fileInput.files) !== null && _a !== void 0 ? _a : []).slice(0, maxFiles);
+        const files = Array.from((_b = fileInput.files) !== null && _b !== void 0 ? _b : []).slice(0, maxFiles);
         if (files.length === 0)
             return;
         files.forEach(file => {
@@ -136,7 +144,7 @@ function initWhitespace() {
       `;
             fileList.appendChild(item);
         });
-        if (((_c = (_b = fileInput.files) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0) > maxFiles) {
+        if (((_c = (_a = fileInput.files) === null || _a === void 0 ? void 0 : _a.length) !== null && _c !== void 0 ? _c : 0) > maxFiles) {
             const warn = document.createElement('p');
             warn.className = 'help is-warning';
             warn.textContent = `Only the first ${maxFiles} files will be uploaded.`;
@@ -149,7 +157,8 @@ function initWhitespace() {
     // PASTE FILES/IMAGES FROM CLIPBOARD
     if (fileInput && fileList) {
         document.addEventListener('paste', e => {
-            var _a, _b, _c;
+            var _a;
+            var _b, _c;
             const clipboardFiles = Array.from((_b = (_a = e.clipboardData) === null || _a === void 0 ? void 0 : _a.items) !== null && _b !== void 0 ? _b : [])
                 .filter(item => item.kind === 'file')
                 .map(item => item.getAsFile())
@@ -160,6 +169,7 @@ function initWhitespace() {
             const merged = new DataTransfer();
             Array.from((_c = fileInput.files) !== null && _c !== void 0 ? _c : []).forEach(f => merged.items.add(f));
             clipboardFiles.forEach((f, i) => {
+                // Clipboard images arrive as generic "image.png" - disambiguate multiple pastes.
                 const named = f.name === 'image.png'
                     ? new File([f], `pasted-image-${Date.now()}-${i}.png`, { type: f.type })
                     : f;

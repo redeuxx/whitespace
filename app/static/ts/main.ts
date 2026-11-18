@@ -48,8 +48,14 @@ function initWhitespace(): void {
 
   // SYNTAX HIGHLIGHTING + LINE NUMBERS
   document.querySelectorAll('pre code.hljs-target').forEach(block => {
+    // textContent, read before highlighting: same text, no forced layout.
+    const text = block.textContent ?? '';
+    // ponytail: auto-detection runs every grammar (seconds on a 500 KB log),
+    // so big pastes the server could not classify render as plain text.
+    if (text.length > 100000 && !/\blanguage-/.test(block.className)) {
+      block.classList.add('language-plaintext');
+    }
     hljs.highlightElement(block);
-    const text = (block as HTMLElement).innerText;
     const count = text.endsWith('\n') ? text.split('\n').length - 1 : text.split('\n').length;
     const gutter = document.createElement('div');
     gutter.className = 'line-numbers';
