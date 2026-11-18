@@ -226,10 +226,13 @@ def view_paste(slug):
                 flash('Incorrect password.', 'danger')
         return render_template('password.html', paste=paste)
 
+    # Decrypt into a local, never into paste.content: the ORM would flush the
+    # plaintext back to the database on the next commit.
+    content = paste.content
     if paste.is_password_protected:
         pw = session.get('paste_passwords', {}).get(slug, '')
         try:
-            paste.content = decrypt_content(paste.content, pw, slug, current_app.config['SECRET_KEY'])
+            content = decrypt_content(content, pw, slug, current_app.config['SECRET_KEY'])
         except Exception:
             flash('Could not decrypt paste. Please re-enter the password.', 'danger')
             unlocked_list = session.get('unlocked_pastes', [])
@@ -250,10 +253,10 @@ def view_paste(slug):
         previews.remove(slug)
         session['burn_previews'] = previews
         session.modified = True
-        if is_single_url(paste.content):
+        if is_single_url(content):
             return render_template('redirect_paste.html', paste=paste, burn_preview=True,
-                                   redirect_url=paste.content.strip())
-        return render_template('view_paste.html', paste=paste, burn_preview=True,
+                                   redirect_url=content.strip())
+        return render_template('view_paste.html', paste=paste, content=content, burn_preview=True,
                                parent_paste=parent_paste)
 
     # Increment view count
@@ -262,7 +265,7 @@ def view_paste(slug):
 
     burn = paste.burn_after_read
 
-    if is_single_url(paste.content):
+    if is_single_url(content):
         creator_views = session.get('url_creator_views', [])
         is_url_creator = slug in creator_views
         if is_url_creator:
@@ -271,11 +274,11 @@ def view_paste(slug):
             session.modified = True
         response = make_response(render_template('redirect_paste.html', paste=paste,
                                                  burn_preview=False,
-                                                 redirect_url=paste.content.strip(),
+                                                 redirect_url=content.strip(),
                                                  is_creator=is_url_creator))
     else:
-        response = make_response(render_template('view_paste.html', paste=paste, burn_preview=False,
-                                                 parent_paste=parent_paste))
+        response = make_response(render_template('view_paste.html', paste=paste, content=content,
+                                                 burn_preview=False, parent_paste=parent_paste))
 
     if burn:
         try:
@@ -435,6 +438,8 @@ def search():
         base = Paste.query.filter(
             Paste.is_private == False,  # noqa: E712
             Paste.burn_after_read == False,  # noqa: E712
+            # Never match or snippet protected pastes: content may be secret.
+            Paste.password_hash.is_(None),
             db.or_(Paste.expires_at.is_(None), Paste.expires_at > now),
             db.or_(
                 Paste.title.ilike(f'%{query}%'),

@@ -179,6 +179,21 @@ class TestRawPasteRoute:
         rv = client.get('/p/rawprotected/raw')
         assert rv.status_code == 403
 
+    def test_viewing_unlocked_paste_keeps_content_encrypted(self, app, client):
+        from app.extensions import db
+        from app.models import Paste
+
+        rv = client.post('/new', data={'content': 'TOP SECRET body text', 'password': 'pw'})
+        slug = rv.headers['Location'].rsplit('/', 1)[1]
+        reader = app.test_client()
+        reader.post(f'/p/{slug}', data={'password': 'pw'})
+        rv = reader.get(f'/p/{slug}')
+        assert b'TOP SECRET body text' in rv.data
+
+        db.session.expire_all()
+        stored = Paste.query.filter_by(slug=slug).one().content
+        assert stored.startswith('enc:v2:')
+
 
 class TestForkPasteRoute:
     def test_fork_returns_prefilled_form(self, client, sample_paste):
@@ -212,6 +227,19 @@ class TestSearchRoute:
     def test_private_paste_excluded_from_search(self, client, private_paste):
         rv = client.get('/search?q=Secret')
         assert b'Private Paste' not in rv.data
+
+    def test_protected_paste_excluded_from_search(self, app, client):
+        from app.extensions import db
+        from app.models import Paste
+        from werkzeug.security import generate_password_hash
+
+        # Plaintext content under a password hash, as legacy rows may hold.
+        db.session.add(Paste(slug='protsearch', title='Locked', content='needle secret',
+                             password_hash=generate_password_hash('pw')))
+        db.session.commit()
+        rv = client.get('/search?q=needle')
+        assert b'Locked' not in rv.data
+        assert b'needle secret' not in rv.data
 
 
 class TestAttachmentServing:
