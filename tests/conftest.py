@@ -9,7 +9,9 @@ class TestConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     ADMIN_USERNAME = 'admin'
     ADMIN_PASSWORD = 'testpassword'
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads_test')
+    # Per xdist worker, so parallel runs never share upload files.
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads_test',
+                                 os.environ.get('PYTEST_XDIST_WORKER', 'main'))
     MAX_FILE_SIZE = 10 * 1024 * 1024
     MAX_ATTACHMENTS = 10
     RATE_LIMIT_PASTE = '1000 per hour'

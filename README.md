@@ -44,3 +44,12 @@ docker compose up -d
 ```
 
 `--pull --no-cache` picks up base image and Alpine security updates that a cached build would skip.
+
+## Running tests (local)
+
+```sh
+uv sync
+uv run pytest -n 4
+```
+
+`-n 4` runs the suite on 4 pytest-xdist workers. It is a local setting only, not in the pytest config, so other runners stay serial. Plain `uv run pytest` still works.
