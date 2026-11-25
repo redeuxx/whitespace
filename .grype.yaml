@@ -37,3 +37,23 @@ ignore:
   - vulnerability: CVE-2026-119373
     package:
       name: sqlite-libs
+  # OpenSSL 3.5.9 (libssl3/libcrypto3), no fixed Alpine package yet. Only
+  # Python's ssl module links the system OpenSSL (cryptography bundles its
+  # own), and the app uses it only as an outbound HTTPS client.
+  # QUIC server stream state leak and RETIRE_CONNECTION_ID flood. Python's ssl
+  # has no QUIC support and the app serves plain HTTP behind a proxy.
+  # expires 2027-01-25
+  - vulnerability: CVE-2026-124709
+  # expires 2027-01-25
+  - vulnerability: CVE-2026-107494
+  # CMS/PKCS#7 SignedData verification with CRLs. Nothing in the app verifies
+  # CMS or PKCS#7 messages.
+  # expires 2027-01-25
+  - vulnerability: CVE-2026-121482
+  # DANE-enabled TLS client crash. Python's ssl never enables DANE.
+  # expires 2027-01-25
+  - vulnerability: CVE-2026-84786
+  # PEM_X509_INFO_read_bio_ex failure into an existing stack. Only reached via
+  # the image's own CA bundle, never attacker-supplied PEM.
+  # expires 2027-01-25
+  - vulnerability: CVE-2026-107493
